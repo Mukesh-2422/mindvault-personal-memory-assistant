@@ -225,7 +225,7 @@ function InlineVoicePlayer({ memory, onNavigate, onSelectMemory }) {
           className="inline-voice-detail-link"
           onClick={() => onNavigate(`/memory/${memory.id}`, { state: { from: "/home" } })}
         >
-          <span>View details</span>
+          <span>See memory</span>
           <ArrowUpRight size={13} strokeWidth={2.2} />
         </button>
       </div>
@@ -268,7 +268,7 @@ function InlineImageCard({ memory, onNavigate }) {
           className="inline-voice-detail-link"
           onClick={() => onNavigate(`/memory/${memory.id}`, { state: { from: "/home" } })}
         >
-          <span>View details</span>
+          <span>See memory</span>
           <ArrowUpRight size={13} strokeWidth={2.2} />
         </button>
       </div>
@@ -321,7 +321,7 @@ function InlineTextCard({ memory, onNavigate }) {
           className="inline-voice-detail-link"
           onClick={() => onNavigate(`/memory/${memory.id}`, { state: { from: "/home" } })}
         >
-          <span>View details</span>
+          <span>See memory</span>
           <ArrowUpRight size={13} strokeWidth={2.2} />
         </button>
       </div>
