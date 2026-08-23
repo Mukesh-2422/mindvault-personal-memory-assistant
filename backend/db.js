@@ -35,7 +35,10 @@ async function connect() {
 }
 
 async function readData() {
-  const raw = await fs.readFile(DATA_FILE, "utf8");
+  let raw = await fs.readFile(DATA_FILE, "utf8");
+  if (raw.charCodeAt(0) === 0xFEFF) {
+    raw = raw.slice(1);
+  }
   return JSON.parse(raw);
 }
 

@@ -11,7 +11,7 @@ export default function MemoryCard({ memory }) {
   if (!memory) return null;
 
   const openMemory = () =>
-    navigate(`/memory/${memory.id}`, { state: { from: location.pathname } });
+    navigate(`/memory/${memory.id || memory._id}`, { state: { from: location.pathname } });
 
   const typeIcon = getMemoryTypeIcon(memory.type, 20);
 

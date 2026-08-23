@@ -21,14 +21,14 @@ const WAVEFORM_HEIGHTS = [
 
 function getResolvedMemoryType(memory) {
   if (!memory) return "text";
-  const explicitType = memory.type?.toLowerCase();
+  const explicitType = typeof memory.type === "string" ? memory.type.toLowerCase() : "";
 
   // 1. Image
   if (
     explicitType === "image" ||
     memory.imageUrl ||
-    (memory.mediaData && memory.mediaData.startsWith("data:image")) ||
-    (memory.mediaUrl && memory.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i))
+    (typeof memory.mediaData === "string" && memory.mediaData.startsWith("data:image")) ||
+    (typeof memory.mediaUrl === "string" && memory.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i))
   ) {
     return "image";
   }
@@ -38,8 +38,8 @@ function getResolvedMemoryType(memory) {
     explicitType === "voice" ||
     explicitType === "audio" ||
     memory.audioUrl ||
-    (memory.mediaData && memory.mediaData.startsWith("data:audio")) ||
-    (memory.mediaUrl && memory.mediaUrl.match(/\.(mp3|wav|ogg|m4a|aac|weba)(\?.*)?$/i) && explicitType !== "video")
+    (typeof memory.mediaData === "string" && memory.mediaData.startsWith("data:audio")) ||
+    (typeof memory.mediaUrl === "string" && memory.mediaUrl.match(/\.(mp3|wav|ogg|m4a|aac|weba)(\?.*)?$/i) && explicitType !== "video")
   ) {
     return "voice";
   }
@@ -48,7 +48,7 @@ function getResolvedMemoryType(memory) {
   if (
     explicitType === "video" ||
     memory.videoUrl ||
-    (memory.mediaUrl && memory.mediaUrl.match(/\.(mp4|webm|mov|mkv)(\?.*)?$/i))
+    (typeof memory.mediaUrl === "string" && memory.mediaUrl.match(/\.(mp4|webm|mov|mkv)(\?.*)?$/i))
   ) {
     return "video";
   }
@@ -59,7 +59,7 @@ function getResolvedMemoryType(memory) {
   }
 
   // 5. Link
-  if (explicitType === "link" || memory.url || (memory.content && /^https?:\/\//i.test(memory.content.trim()))) {
+  if (explicitType === "link" || memory.url || (typeof memory.content === "string" && /^https?:\/\//i.test(memory.content.trim()))) {
     return "link";
   }
 
@@ -223,7 +223,7 @@ function InlineVoicePlayer({ memory, onNavigate, onSelectMemory }) {
         <button
           type="button"
           className="inline-voice-detail-link"
-          onClick={() => onNavigate(`/memory/${memory.id}`, { state: { from: "/home" } })}
+          onClick={() => onNavigate(`/memory/${memory.id || memory._id}`, { state: { from: "/home" } })}
         >
           <span>See memory</span>
           <ArrowUpRight size={13} strokeWidth={2.2} />
@@ -266,7 +266,7 @@ function InlineImageCard({ memory, onNavigate }) {
         <button
           type="button"
           className="inline-voice-detail-link"
-          onClick={() => onNavigate(`/memory/${memory.id}`, { state: { from: "/home" } })}
+          onClick={() => onNavigate(`/memory/${memory.id || memory._id}`, { state: { from: "/home" } })}
         >
           <span>See memory</span>
           <ArrowUpRight size={13} strokeWidth={2.2} />
@@ -319,7 +319,7 @@ function InlineTextCard({ memory, onNavigate }) {
         <button
           type="button"
           className="inline-voice-detail-link"
-          onClick={() => onNavigate(`/memory/${memory.id}`, { state: { from: "/home" } })}
+          onClick={() => onNavigate(`/memory/${memory.id || memory._id}`, { state: { from: "/home" } })}
         >
           <span>See memory</span>
           <ArrowUpRight size={13} strokeWidth={2.2} />
@@ -352,27 +352,28 @@ function ChatSourcePillsGroup({ memories, allMemories, onNavigate }) {
   };
 
   const fullSelectedMemory = selectedId
-    ? allMemories.find((m) => m.id === selectedId) || memories.find((m) => m.id === selectedId)
+    ? (allMemories || []).find((m) => m && (m.id === selectedId || m._id === selectedId)) || memories.find((m) => m && (m.id === selectedId || m._id === selectedId))
     : null;
 
   return (
     <div className="chat-sources-container">
       <div className="chat-sources-heading">REFERENCED MEMORIES</div>
       <div className="chat-sources-pills-row">
-        {memories.map((mem) => {
-          const fullMem = allMemories.find((m) => m.id === mem.id) || mem;
-          const isSelected = selectedId === mem.id;
+        {memories.map((mem, idx) => {
+          const memId = mem?.id || mem?._id || `src_${idx}`;
+          const fullMem = (allMemories || []).find((m) => m && (m.id === memId || m._id === memId)) || mem;
+          const isSelected = selectedId === memId;
           return (
             <button
-              key={mem.id}
+              key={memId}
               type="button"
               className={`chat-source-universal-pill ${isSelected ? "selected" : ""}`}
-              onClick={() => handlePillClick(mem.id)}
+              onClick={() => handlePillClick(memId)}
               aria-expanded={isSelected}
-              title={`View ${fullMem.title || "memory"}`}
+              title={`View ${fullMem?.title || "memory"}`}
             >
-              {getMemoryTypeIconHelper(fullMem.type, fullMem)}
-              <span className="source-pill-title">{fullMem.title || "Untitled"}</span>
+              {getMemoryTypeIconHelper(fullMem?.type, fullMem)}
+              <span className="source-pill-title">{fullMem?.title || "Untitled"}</span>
               <ChevronDown size={13} className={`source-pill-chevron ${isSelected ? "rotated" : ""}`} />
             </button>
           );
@@ -477,7 +478,7 @@ export default function HomePage() {
     }
   }, [messages, isTyping]);
 
-  const onThisDay = getOnThisDay(state.memories);
+  const onThisDay = getOnThisDay(state.memories || []);
 
   const searchMemories = useCallback((query) => {
     if (!query.trim()) {
@@ -489,15 +490,15 @@ export default function HomePage() {
     setIsSearchingMemories(true);
     const q = query.toLowerCase();
 
-    const results = state.memories
-      .filter((m) => !m.deleted)
+    const results = (state.memories || [])
+      .filter((m) => m && !m.deleted)
       .filter(
         (m) =>
-          m.title.toLowerCase().includes(q) ||
-          m.content.toLowerCase().includes(q) ||
-          (m.tags && m.tags.some((t) => t.toLowerCase().includes(q))) ||
-          (m.category && m.category.toLowerCase().includes(q)) ||
-          (m.relatedPerson && m.relatedPerson.toLowerCase().includes(q))
+          (m.title && m.title.toLowerCase().includes(q)) ||
+          (m.content && m.content.toLowerCase().includes(q)) ||
+          (m.tags && Array.isArray(m.tags) && m.tags.some((t) => typeof t === "string" && t.toLowerCase().includes(q))) ||
+          (m.category && typeof m.category === "string" && m.category.toLowerCase().includes(q)) ||
+          (m.relatedPerson && typeof m.relatedPerson === "string" && m.relatedPerson.toLowerCase().includes(q))
       );
 
     setMemorySearchResults(results);
@@ -1008,7 +1009,7 @@ export default function HomePage() {
     }
   };
 
-  const hasMemories = state.memories.some((m) => !m.deleted);
+  const hasMemories = Array.isArray(state.memories) && state.memories.some((m) => m && !m.deleted);
   const isInitialLoading = loading || (!state.dataLoaded && state.loading);
   const isEmptyState = !isInitialLoading && !hasMemories && messages.length === 0;
 
@@ -1032,7 +1033,7 @@ export default function HomePage() {
 
         {/* Memory Recall - On This Day (Only shown if memories exist) */}
         {!isInitialLoading && hasMemories && onThisDay && (
-          <div className="memory-recall-card" onClick={() => navigate(`/memory/${onThisDay.id}`, { state: { from: "/home" } })}>
+          <div className="memory-recall-card" onClick={() => navigate(`/memory/${onThisDay.id || onThisDay._id}`, { state: { from: "/home" } })}>
             <div className="recall-header">
               <Sparkles size={16} strokeWidth={2} />
               <span className="recall-label">On This Day</span>
@@ -1053,76 +1054,79 @@ export default function HomePage() {
               <span>Found {memorySearchResults.length} memory{memorySearchResults.length !== 1 ? "ies" : "y"}</span>
             </div>
             <div className="memory-search-list">
-              {memorySearchResults.map((m) => (
-                <div
-                  key={m.id}
-                  className="memory-search-item"
-                >
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                    <div className="memory-search-media">
-                      {m.type === "voice" && (m.mediaUrl || m.mediaData) && (
-                        <button
-                          className={`memory-search-play-btn ${playingAudioId === m.id ? "playing" : ""}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleAudioPlay(m.id, m.mediaUrl || m.mediaData);
-                          }}
-                          title={playingAudioId === m.id ? "Pause" : "Play voice memory"}
-                        >
-                          {playingAudioId === m.id ? (
-                            <span className="pause-icon">❚❚</span>
-                          ) : (
-                            <Play size={14} fill="currentColor" />
-                          )}
-                        </button>
-                      )}
-                      {m.type === "image" && (m.mediaUrl || m.mediaData) && (
-                        <img
-                          src={getMediaUrl(m.mediaUrl || m.mediaData)}
-                          alt={m.title}
-                          className="memory-search-thumb"
-                        />
-                      )}
-                      {m.type === "video" && (m.mediaUrl || m.mediaData) && (
-                        <div className="memory-search-video-badge">
-                          <VideoIcon size={16} />
+              {memorySearchResults.map((m, idx) => {
+                const memoryId = m?.id || m?._id || `res_${idx}`;
+                return (
+                  <div
+                    key={memoryId}
+                    className="memory-search-item"
+                  >
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                      <div className="memory-search-media">
+                        {m.type === "voice" && (m.mediaUrl || m.mediaData) && (
+                          <button
+                            className={`memory-search-play-btn ${playingAudioId === memoryId ? "playing" : ""}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleAudioPlay(memoryId, m.mediaUrl || m.mediaData);
+                            }}
+                            title={playingAudioId === memoryId ? "Pause" : "Play voice memory"}
+                          >
+                            {playingAudioId === memoryId ? (
+                              <span className="pause-icon">❚❚</span>
+                            ) : (
+                              <Play size={14} fill="currentColor" />
+                            )}
+                          </button>
+                        )}
+                        {m.type === "image" && (m.mediaUrl || m.mediaData) && (
+                          <img
+                            src={getMediaUrl(m.mediaUrl || m.mediaData)}
+                            alt={m.title || "Memory preview"}
+                            className="memory-search-thumb"
+                          />
+                        )}
+                        {m.type === "video" && (m.mediaUrl || m.mediaData) && (
+                          <div className="memory-search-video-badge">
+                            <VideoIcon size={16} />
+                          </div>
+                        )}
+                        {m.type === "checklist" && (
+                          <div className="memory-search-checklist-badge">
+                            <CheckSquare size={16} />
+                          </div>
+                        )}
+                        {(!m.type || m.type === "text") && (
+                          <div className="memory-search-text-badge">
+                            <FileText size={16} />
+                          </div>
+                        )}
+                      </div>
+                      <div
+                        className="memory-search-item-info"
+                        onClick={() => navigate(`/memory/${memoryId}`, { state: { from: "/home" } })}
+                        style={{ cursor: "pointer", flex: 1 }}
+                      >
+                        <div className="memory-search-item-title">{m.title || "Untitled Memory"}</div>
+                        <div className="memory-search-item-preview">
+                          {m.content ? m.content.substring(0, 100) + (m.content.length > 100 ? "..." : "") : "No content"}
                         </div>
-                      )}
-                      {m.type === "checklist" && (
-                        <div className="memory-search-checklist-badge">
-                          <CheckSquare size={16} />
-                        </div>
-                      )}
-                      {m.type === "text" && (
-                        <div className="memory-search-text-badge">
-                          <FileText size={16} />
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      className="memory-search-item-info"
-                      onClick={() => navigate(`/memory/${m.id}`, { state: { from: "/home" } })}
-                      style={{ cursor: "pointer", flex: 1 }}
-                    >
-                      <div className="memory-search-item-title">{m.title}</div>
-                      <div className="memory-search-item-preview">
-                        {m.content ? m.content.substring(0, 100) + (m.content.length > 100 ? "..." : "") : "No content"}
                       </div>
                     </div>
-                  </div>
 
-                  {m.type === "voice" && (m.mediaUrl || m.mediaData) && (
-                    <audio
-                      ref={(el) => {
-                        if (el) audioRefs.current[m.id] = el;
-                      }}
-                      src={getMediaUrl(m.mediaUrl || m.mediaData)}
-                      onEnded={() => handleAudioEnded(m.id)}
-                      style={{ display: "none" }}
-                    />
-                  )}
-                </div>
-              ))}
+                    {m.type === "voice" && (m.mediaUrl || m.mediaData) && (
+                      <audio
+                        ref={(el) => {
+                          if (el) audioRefs.current[memoryId] = el;
+                        }}
+                        src={getMediaUrl(m.mediaUrl || m.mediaData)}
+                        onEnded={() => handleAudioEnded(memoryId)}
+                        style={{ display: "none" }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -1266,10 +1270,10 @@ export default function HomePage() {
         {messages.length > 0 && (
           <div className="chat-container">
             <div className="chat-messages">
-              {messages.map((msg) => {
+              {messages.map((msg, index) => {
                 const referencedList = msg.referencedMemories || msg.relatedMemories || [];
-                const referencedMemId = msg.selectedMemory?.id || (referencedList.length === 1 ? referencedList[0].id : null);
-                const matchedMem = referencedMemId ? state.memories.find((m) => m.id === referencedMemId) : null;
+                const referencedMemId = msg.selectedMemory?.id || msg.selectedMemory?._id || (referencedList.length === 1 ? (referencedList[0]?.id || referencedList[0]?._id) : null);
+                const matchedMem = referencedMemId ? (state.memories || []).find((m) => m && (m.id === referencedMemId || m._id === referencedMemId)) : null;
 
                 // Collect sources to display as universal pills
                 const displaySources = referencedList.length > 0
@@ -1277,7 +1281,7 @@ export default function HomePage() {
                   : (msg.selectedMemory || matchedMem ? [msg.selectedMemory || matchedMem] : []);
 
                 return (
-                  <div key={msg.id} className={`chat-message ${msg.role}`}>
+                  <div key={msg.id || msg._id || `msg_${index}`} className={`chat-message ${msg.role || "assistant"}`}>
                     <div className="chat-avatar">
                       {msg.role === "user" ? (
                         state.user?.name?.charAt(0).toUpperCase() || "U"

@@ -212,13 +212,15 @@ export const dummyChatHistory = [
 ];
 
 export const getOnThisDay = (memories) => {
+  if (!Array.isArray(memories) || memories.length === 0) return null;
   const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
   const memory = memories.find((m) => {
+    if (!m || !m.date || m.deleted) return false;
     const memDate = new Date(m.date);
+    if (isNaN(memDate.getTime())) return false;
     return (
-      Math.abs(memDate.getTime() - oneYearAgo.getTime()) < 5 * 24 * 60 * 60 * 1000 &&
-      !m.deleted
+      Math.abs(memDate.getTime() - oneYearAgo.getTime()) < 5 * 24 * 60 * 60 * 1000
     );
   });
-  return memory || memories.find((m) => !m.deleted && m.id === "2") || null;
+  return memory || memories.find((m) => m && !m.deleted && (m.id === "2" || m._id === "2")) || null;
 };

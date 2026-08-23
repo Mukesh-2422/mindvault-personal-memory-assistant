@@ -122,11 +122,11 @@ export default function SearchPage() {
     const q = query.toLowerCase();
     return mems.filter(
       (m) =>
-        m.title.toLowerCase().includes(q) ||
-        m.content.toLowerCase().includes(q) ||
-        (m.tags && m.tags.some((t) => t.includes(q))) ||
-        (m.category && m.category.toLowerCase().includes(q)) ||
-        (m.relatedPerson && m.relatedPerson.toLowerCase().includes(q))
+        (m.title && m.title.toLowerCase().includes(q)) ||
+        (m.content && m.content.toLowerCase().includes(q)) ||
+        (m.tags && Array.isArray(m.tags) && m.tags.some((t) => typeof t === "string" && t.toLowerCase().includes(q))) ||
+        (m.category && typeof m.category === "string" && m.category.toLowerCase().includes(q)) ||
+        (m.relatedPerson && typeof m.relatedPerson === "string" && m.relatedPerson.toLowerCase().includes(q))
     );
   }, [state.memories, query, activeFilter]);
 
