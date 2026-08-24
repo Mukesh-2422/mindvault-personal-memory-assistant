@@ -92,7 +92,7 @@ export default function ProfilePage() {
           <ArrowLeft size={16} strokeWidth={1.5} />
         </button>
         <div className="profile-header">
-          <div className="profile-avatar" onClick={() => navigate("/settings/profile")} title="Edit profile picture">
+          <div className="profile-avatar" onClick={() => navigate("/settings/profile", { state: { from: "/profile" } })} title="Edit profile picture">
             {state.user?.avatar
               ? <img src={state.user.avatar} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
               : getInitials(state.user?.name || "U")
@@ -101,7 +101,7 @@ export default function ProfilePage() {
           </div>
           <h1 className="profile-name">{state.user?.name || "User"}</h1>
           <p className="profile-email">{state.user?.email || ""}</p>
-          <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={() => navigate("/settings/profile")}>
+          <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={() => navigate("/settings/profile", { state: { from: "/profile" } })}>
             <Edit3 size={14} strokeWidth={2} /> Edit Profile
           </button>
         </div>

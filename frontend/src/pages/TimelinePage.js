@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import TopNav from "../components/layout/TopNav";
-import FAB from "../components/layout/FAB";
 import { useApp } from "../context/AppContext";
 import { useAppBackNavigation } from "../utils/useAppBackNavigation";
 import {
@@ -115,7 +114,6 @@ export default function TimelinePage() {
           })
         )}
       </div>
-      <FAB />
     </div>
   );
 }

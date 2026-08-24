@@ -89,14 +89,14 @@
   --border-color: #334155;
   --border-light: #1E293B;
   
-  --accent: #0F2F5B;
-  --accent-hover: #184173;
-  --accent-active: #0A2342;
-  --accent-light: #1E3A5F;
+  --accent: #38BDF8;
+  --accent-hover: #0EA5E9;
+  --accent-active: #0284C7;
+  --accent-light: #0C4A6E;
   --accent-subtle: #1E293B;
   
-  --navy: #0F2F5B;
-  --navy-hover: #184173;
+  --navy: #F1F5F9;
+  --navy-hover: #E2E8F0;
   
   --success: #22C55E;
   --success-light: #14532D;
@@ -505,7 +505,7 @@ textarea.input-field {
   width: 56px;
   height: 56px;
   border-radius: var(--radius-full);
-  background: var(--navy);
+  background: var(--accent);
   color: white;
   display: flex;
   align-items: center;
@@ -520,7 +520,7 @@ textarea.input-field {
 .fab:hover {
   transform: scale(1.08) translateY(-2px);
   box-shadow: var(--shadow-xl);
-  background: var(--navy-hover);
+  background: var(--accent-hover);
 }
 
 .fab:active {
@@ -950,6 +950,19 @@ textarea.input-field {
 
 .animate-slide-in {
   animation: slideIn 0.3s ease;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
 
 /* ============================================

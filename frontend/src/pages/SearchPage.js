@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import TopNav from "../components/layout/TopNav";
-import FAB from "../components/layout/FAB";
 import MemoryCard from "../components/memory/MemoryCard";
 import { useApp } from "../context/AppContext";
 import { useAppBackNavigation } from "../utils/useAppBackNavigation";
@@ -250,7 +249,6 @@ export default function SearchPage() {
           </div>
         )}
       </div>
-      <FAB />
     </div>
   );
 }

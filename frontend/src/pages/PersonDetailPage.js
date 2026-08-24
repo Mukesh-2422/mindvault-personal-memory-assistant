@@ -14,7 +14,7 @@ export default function PersonDetailPage() {
   const { state } = useApp();
   const goBack = useAppBackNavigation("/people");
 
-  const person = state.people.find((p) => p.id === id);
+  const person = (state.people || []).find((p) => p && (p.id === id || p._id === id || String(p.id) === String(id) || String(p._id) === String(id)));
 
   if (!person) {
     return (
@@ -39,11 +39,12 @@ export default function PersonDetailPage() {
     );
   }
 
-  const relatedMemories = state.memories.filter(
+  const relatedMemories = (state.memories || []).filter(
     (m) =>
+      m &&
       !m.deleted &&
-      (person.relatedMemoryIds.includes(m.id) ||
-        m.relatedPerson === person.name)
+      ((Array.isArray(person.relatedMemoryIds) && person.relatedMemoryIds.some((rmId) => rmId === m.id || rmId === m._id)) ||
+        (person.name && m.relatedPerson && m.relatedPerson.toLowerCase() === person.name.toLowerCase()))
   );
 
   const birthday = person.birthday

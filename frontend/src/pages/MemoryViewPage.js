@@ -21,7 +21,10 @@ export default function MemoryViewPage() {
   const { state, dispatch } = useApp();
   const goBack = useAppBackNavigation("/collections");
 
-  const memory = state.memories.find((m) => m.id === id);
+  const [fetchedMemory, setFetchedMemory] = useState(null);
+  const [loadingMemory, setLoadingMemory] = useState(false);
+
+  const memory = (state.memories || []).find((m) => m && (m.id === id || m._id === id || String(m.id) === String(id) || String(m._id) === String(id))) || fetchedMemory;
 
   const [moreOpen, setMoreOpen] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -41,6 +44,25 @@ export default function MemoryViewPage() {
   const titleInputRef = useRef(null);
   const contentInputRef = useRef(null);
   const autoSaveTimerRef = useRef(null);
+
+  // Fetch memory if not already in local state
+  useEffect(() => {
+    if (!memory && id && !loadingMemory) {
+      setLoadingMemory(true);
+      getMemory(id)
+        .then((res) => {
+          if (res) {
+            setFetchedMemory(res);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load memory:", err);
+        })
+        .finally(() => {
+          setLoadingMemory(false);
+        });
+    }
+  }, [id, memory, loadingMemory]);
 
   // Sync state when memory is loaded or changed
   useEffect(() => {
@@ -76,6 +98,27 @@ export default function MemoryViewPage() {
   }, [editContent]);
 
   if (!memory) {
+    if (loadingMemory || state.loading) {
+      return (
+        <div className="new-memory-page">
+          <nav className="memory-editor-nav">
+            <div className="editor-nav-left">
+              <button className="editor-nav-btn" onClick={goBack} aria-label="Go back">
+                <ArrowLeft size={16} strokeWidth={1.5} />
+              </button>
+            </div>
+            <div className="editor-nav-center">
+              <span style={{ display: "flex" }}><FileText size={20} strokeWidth={1.5} /></span>
+            </div>
+            <div className="editor-nav-right" />
+          </nav>
+          <div className="memory-editor-content" style={{ textAlign: "center", paddingTop: 60 }}>
+            <p style={{ color: "var(--text-secondary)" }}>Loading memory details...</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="new-memory-page">
         <nav className="memory-editor-nav">
@@ -100,10 +143,12 @@ export default function MemoryViewPage() {
     );
   }
 
+  const memoryId = memory.id || memory._id || id;
+
   const handleDelete = async () => {
     try {
-      await deleteMemory(memory.id);
-      dispatch({ type: "DELETE_MEMORY", payload: memory.id });
+      await deleteMemory(memoryId);
+      dispatch({ type: "DELETE_MEMORY", payload: memoryId });
       goBack();
     } catch (err) {
       console.error("Delete failed:", err);
@@ -112,8 +157,8 @@ export default function MemoryViewPage() {
 
   const handlePin = async () => {
     try {
-      await togglePinMemory(memory.id);
-      dispatch({ type: "TOGGLE_PIN", payload: memory.id });
+      await togglePinMemory(memoryId);
+      dispatch({ type: "TOGGLE_PIN", payload: memoryId });
     } catch (err) {
       console.error("Pin toggle failed:", err);
     }
@@ -130,9 +175,9 @@ export default function MemoryViewPage() {
         checklist: memory.type === "checklist" ? editChecklist : undefined,
         date: memory.date || new Date().toISOString(),
       };
-      await updateMemory(memory.id, updatedPayload);
-      const updated = await getMemory(memory.id);
-      dispatch({ type: "UPDATE_MEMORY", payload: updated || { ...memory, ...updatedPayload } });
+      await updateMemory(memoryId, updatedPayload);
+      const updated = await getMemory(memoryId);
+      dispatch({ type: "UPDATE_MEMORY", payload: updated || { ...memory, ...updatedPayload, id: memoryId } });
       setAutoSaveStatus("Saved");
       setTimeout(() => setAutoSaveStatus(""), 2000);
     } catch (err) {
@@ -325,8 +370,8 @@ export default function MemoryViewPage() {
                   onClick={async () => {
                     setMoreOpen(false);
                     try {
-                      await moveMemoryToVault(memory.id);
-                      dispatch({ type: "DELETE_MEMORY", payload: memory.id });
+                      await moveMemoryToVault(memoryId);
+                      dispatch({ type: "DELETE_MEMORY", payload: memoryId });
                       dispatch({ type: "UNLOCK_VAULT" });
                       navigate("/vault");
                     } catch {

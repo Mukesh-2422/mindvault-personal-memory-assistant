@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import TopNav from "../components/layout/TopNav";
+import FAB from "../components/layout/FAB";
 import { useApp } from "../context/AppContext";
 import { formatTime } from "../utils/helpers";
 import { getOnThisDay } from "../data/dummyData";
@@ -1542,6 +1543,9 @@ export default function HomePage() {
           {toastMessage}
         </div>
       )}
+
+      {/* Floating Action Button */}
+      <FAB />
     </div>
   );
 }

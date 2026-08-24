@@ -77,7 +77,7 @@ export default function SettingsPage() {
                   <div
                     key={item.label}
                     className="profile-row"
-                    onClick={() => navigate(item.to)}
+                    onClick={() => navigate(item.to, { state: { from: "/settings" } })}
                   >
                     <div className="profile-row-left">
                       <Icon size={18} strokeWidth={1.5} />

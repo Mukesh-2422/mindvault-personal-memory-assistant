@@ -77,27 +77,36 @@ function appReducer(state, action) {
     case "SET_DATA":
       return {
         ...state,
-        memories: action.payload.memories,
-        people: action.payload.people,
+        memories: (action.payload.memories || []).map((m) => ({ ...m, id: m.id || m._id })),
+        people: (action.payload.people || []).map((p) => ({ ...p, id: p.id || p._id })),
         dataLoaded: true,
         loading: false,
       };
     case "SET_MEMORIES":
-      return { ...state, memories: action.payload };
-    case "ADD_MEMORY":
-      return { ...state, memories: [action.payload, ...state.memories] };
-    case "UPDATE_MEMORY":
+      return {
+        ...state,
+        memories: (action.payload || []).map((m) => ({ ...m, id: m.id || m._id })),
+      };
+    case "ADD_MEMORY": {
+      const normalizedMem = { ...action.payload, id: action.payload.id || action.payload._id };
+      return { ...state, memories: [normalizedMem, ...state.memories] };
+    }
+    case "UPDATE_MEMORY": {
+      const updateId = action.payload.id || action.payload._id;
       return {
         ...state,
         memories: state.memories.map((m) =>
-          m.id === action.payload.id ? action.payload : m
+          (m.id === updateId || m._id === updateId || String(m.id) === String(updateId) || String(m._id) === String(updateId))
+            ? { ...m, ...action.payload, id: updateId }
+            : m
         ),
       };
+    }
     case "DELETE_MEMORY":
       return {
         ...state,
         memories: state.memories.map((m) =>
-          m.id === action.payload
+          (m.id === action.payload || m._id === action.payload || String(m.id) === String(action.payload) || String(m._id) === String(action.payload))
             ? { ...m, deleted: true, deletedAt: new Date().toISOString() }
             : m
         ),
@@ -106,7 +115,7 @@ function appReducer(state, action) {
       return {
         ...state,
         memories: state.memories.map((m) =>
-          m.id === action.payload
+          (m.id === action.payload || m._id === action.payload || String(m.id) === String(action.payload) || String(m._id) === String(action.payload))
             ? { ...m, deleted: false, deletedAt: null }
             : m
         ),
@@ -114,30 +123,41 @@ function appReducer(state, action) {
     case "PERMANENT_DELETE":
       return {
         ...state,
-        memories: state.memories.filter((m) => m.id !== action.payload),
+        memories: state.memories.filter((m) => !(m.id === action.payload || m._id === action.payload || String(m.id) === String(action.payload) || String(m._id) === String(action.payload))),
       };
     case "TOGGLE_PIN":
       return {
         ...state,
         memories: state.memories.map((m) =>
-          m.id === action.payload ? { ...m, pinned: !m.pinned } : m
+          (m.id === action.payload || m._id === action.payload || String(m.id) === String(action.payload) || String(m._id) === String(action.payload))
+            ? { ...m, pinned: !m.pinned }
+            : m
         ),
       };
     case "SET_PEOPLE":
-      return { ...state, people: action.payload };
-    case "ADD_PERSON":
-      return { ...state, people: [...state.people, action.payload] };
-    case "UPDATE_PERSON":
+      return {
+        ...state,
+        people: (action.payload || []).map((p) => ({ ...p, id: p.id || p._id })),
+      };
+    case "ADD_PERSON": {
+      const normalizedPerson = { ...action.payload, id: action.payload.id || action.payload._id };
+      return { ...state, people: [...state.people, normalizedPerson] };
+    }
+    case "UPDATE_PERSON": {
+      const updateId = action.payload.id || action.payload._id;
       return {
         ...state,
         people: state.people.map((p) =>
-          p.id === action.payload.id ? action.payload : p
+          (p.id === updateId || p._id === updateId || String(p.id) === String(updateId) || String(p._id) === String(updateId))
+            ? { ...p, ...action.payload, id: updateId }
+            : p
         ),
       };
+    }
     case "DELETE_PERSON":
       return {
         ...state,
-        people: state.people.filter((p) => p.id !== action.payload),
+        people: state.people.filter((p) => !(p.id === action.payload || p._id === action.payload || String(p.id) === String(action.payload) || String(p._id) === String(action.payload))),
       };
     case "UNLOCK_VAULT":
       return { ...state, vaultLocked: false };

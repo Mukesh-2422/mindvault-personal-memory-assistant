@@ -35,11 +35,17 @@ async function connect() {
 }
 
 async function readData() {
-  let raw = await fs.readFile(DATA_FILE, "utf8");
-  if (raw.charCodeAt(0) === 0xFEFF) {
-    raw = raw.slice(1);
+  try {
+    let raw = await fs.readFile(DATA_FILE, "utf8");
+    raw = raw.replace(/^\uFEFF/, "").trim();
+    if (!raw) {
+      return { users: [], memories: [], people: [], vaults: [], passwordResetTokens: [] };
+    }
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error("Error reading JSON DB:", err);
+    return { users: [], memories: [], people: [], vaults: [], passwordResetTokens: [] };
   }
-  return JSON.parse(raw);
 }
 
 async function writeData(data) {
@@ -86,7 +92,17 @@ async function findOne(name, filter) {
 }
 
 async function findById(name, id) {
-  return findOne(name, { id });
+  if (USE_MONGO) {
+    const db = mongoose.connection.db;
+    const { ObjectId } = require("mongodb");
+    let query = { id };
+    if (ObjectId.isValid(id)) {
+      query = { $or: [{ id }, { _id: new ObjectId(id) }, { _id: id }] };
+    }
+    return db.collection(name).findOne(query);
+  }
+  const items = await getCollection(name);
+  return items.find((i) => i.id === id || i._id === id || String(i.id) === String(id) || String(i._id) === String(id)) || null;
 }
 
 async function insertOne(name, item) {
@@ -105,16 +121,29 @@ async function insertOne(name, item) {
 async function updateOne(name, id, updates) {
   if (USE_MONGO) {
     const db = mongoose.connection.db;
+    const { ObjectId } = require("mongodb");
+    let filter = { id };
+    if (ObjectId.isValid(id)) {
+      filter = { $or: [{ id }, { _id: new ObjectId(id) }, { _id: String(id) }] };
+    }
+    const cleanUpdates = {};
+    for (const [k, v] of Object.entries(updates)) {
+      if (v !== undefined) cleanUpdates[k] = v;
+    }
     const result = await db
       .collection(name)
-      .findOneAndUpdate({ id }, { $set: updates }, { returnDocument: "after" });
-    return result.value;
+      .findOneAndUpdate(filter, { $set: cleanUpdates }, { returnDocument: "after" });
+    return result.value || result;
   }
   const data = await readData();
   data[name] = data[name] || [];
-  const idx = data[name].findIndex((i) => i.id === id);
+  const idx = data[name].findIndex((i) => i.id === id || i._id === id || String(i.id) === String(id) || String(i._id) === String(id));
   if (idx === -1) return null;
-  data[name][idx] = { ...data[name][idx], ...updates };
+  const cleanUpdates = {};
+  for (const [k, v] of Object.entries(updates)) {
+    if (v !== undefined) cleanUpdates[k] = v;
+  }
+  data[name][idx] = { ...data[name][idx], ...cleanUpdates };
   await writeData(data);
   return data[name][idx];
 }
@@ -122,13 +151,18 @@ async function updateOne(name, id, updates) {
 async function deleteOne(name, id) {
   if (USE_MONGO) {
     const db = mongoose.connection.db;
-    const result = await db.collection(name).deleteOne({ id });
+    const { ObjectId } = require("mongodb");
+    let filter = { id };
+    if (ObjectId.isValid(id)) {
+      filter = { $or: [{ id }, { _id: new ObjectId(id) }, { _id: id }] };
+    }
+    const result = await db.collection(name).deleteOne(filter);
     return result.deletedCount > 0;
   }
   const data = await readData();
   data[name] = data[name] || [];
   const origLen = data[name].length;
-  data[name] = data[name].filter((i) => i.id !== id);
+  data[name] = data[name].filter((i) => !(i.id === id || i._id === id || String(i.id) === String(id) || String(i._id) === String(id)));
   await writeData(data);
   return data[name].length < origLen;
 }

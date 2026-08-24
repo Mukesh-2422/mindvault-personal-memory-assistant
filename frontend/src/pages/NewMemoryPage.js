@@ -36,7 +36,8 @@ export default function NewMemoryPage() {
 
   const memType = searchParams.get("type") || "text";
   const editId = searchParams.get("edit");
-  const existingMemory = editId ? state.memories.find((m) => m.id === editId) : null;
+  const [loadedExisting, setLoadedExisting] = useState(null);
+  const existingMemory = (editId ? (state.memories || []).find((m) => m && (m.id === editId || m._id === editId || String(m.id) === String(editId) || String(m._id) === String(editId))) : null) || loadedExisting;
 
   const [title, setTitle] = useState(existingMemory?.title || "");
   const [content, setContent] = useState(existingMemory?.content || "");
@@ -60,6 +61,28 @@ export default function NewMemoryPage() {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [saveToVault, setSaveToVault] = useState(existingMemory?.vaultId === "vault");
   const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    if (editId && !existingMemory) {
+      getMemory(editId)
+        .then((res) => {
+          if (res) {
+            setLoadedExisting(res);
+            setTitle(res.title || "");
+            setContent(res.content || "");
+            setType(res.type || "text");
+            setPinned(res.pinned || false);
+            if (res.checklist) setChecklist(res.checklist);
+            if (res.mediaData) setMediaData(res.mediaData);
+            if (res.mediaUrl) setMediaUrl(res.mediaUrl);
+            if (res.vaultId === "vault") setSaveToVault(true);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load existing memory for edit:", err);
+        });
+    }
+  }, [editId, existingMemory]);
   const moreRef = useRef(null);
   const titleRef = useRef(null);
   const fileInputRef = useRef(null);

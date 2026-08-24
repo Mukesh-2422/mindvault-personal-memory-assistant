@@ -99,9 +99,12 @@ async function login(req, res) {
  */
 async function getProfile(req, res) {
   try {
-    const user = await findOne("users", (u) => u.id === req.user.id);
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const user = await findOne("users", (u) => u.id === req.user.id || u._id === req.user.id || String(u.id) === String(req.user.id) || String(u._id) === String(req.user.id));
     if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ id: user.id, name: user.name, email: user.email, avatar: user.avatar });
+    res.json({ id: user.id || user._id, name: user.name, email: user.email, avatar: user.avatar || null });
   } catch (err) {
     console.error("Error fetching profile:", err);
     res.status(500).json({ error: "Failed to fetch profile" });
@@ -113,10 +116,29 @@ async function getProfile(req, res) {
  */
 async function updateProfile(req, res) {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
     const { name, avatar } = req.body;
-    const updated = await updateOne("users", req.user.id, { name, avatar });
+    const updates = {};
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({ error: "Name is required" });
+      }
+      updates.name = name.trim();
+    }
+    if (avatar !== undefined) {
+      updates.avatar = avatar;
+    }
+
+    const user = await findOne("users", (u) => u.id === req.user.id || u._id === req.user.id || String(u.id) === String(req.user.id) || String(u._id) === String(req.user.id));
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const updated = await updateOne("users", user.id || user._id, updates);
     if (!updated) return res.status(404).json({ error: "User not found" });
-    res.json({ id: updated.id, name: updated.name, email: updated.email, avatar: updated.avatar });
+    res.json({ id: updated.id || updated._id, name: updated.name, email: updated.email, avatar: updated.avatar || null });
   } catch (err) {
     console.error("Error updating profile:", err);
     res.status(500).json({ error: "Failed to update profile" });
