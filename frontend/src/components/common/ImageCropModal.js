@@ -1,13 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ZoomIn, ZoomOut, RotateCw, RefreshCw, Check, X, Move } from "lucide-react";
+import { X, ZoomIn, ZoomOut, Camera, Trash2, Check } from "lucide-react";
 
-export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
+export default function ImageCropModal({
+  isOpen,
+  imageSrc,
+  onClose,
+  onApply,
+  onRemove,
+  onSelectNewFile,
+  hasExistingPhoto = false,
+}) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [imageDims, setImageDims] = useState({ naturalWidth: 0, naturalHeight: 0, baseWidth: 0, baseHeight: 0 });
-  
+
+  const modalFileInputRef = useRef(null);
   const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const previewImgRef = useRef(null);
   const containerRef = useRef(null);
@@ -19,7 +27,6 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
     if (isOpen && imageSrc) {
       setZoom(1);
       setPan({ x: 0, y: 0 });
-      setRotation(0);
       setIsDragging(false);
     }
   }, [isOpen, imageSrc]);
@@ -79,14 +86,13 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
     setZoom((prev) => Math.min(Math.max(Number((prev + zoomFactor).toFixed(2)), 1), 3));
   };
 
-  const handleRotate = () => {
-    setRotation((prev) => (prev + 90) % 360);
-  };
-
-  const handleReset = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-    setRotation(0);
+  const handleModalFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (onSelectNewFile) {
+      onSelectNewFile(file);
+    }
+    e.target.value = "";
   };
 
   // Crop & Export onto high-res canvas
@@ -99,7 +105,7 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
     }
 
     try {
-      const OUTPUT_SIZE = 400; // 400x400 px crisp avatar output
+      const OUTPUT_SIZE = 400;
       const canvas = document.createElement("canvas");
       canvas.width = OUTPUT_SIZE;
       canvas.height = OUTPUT_SIZE;
@@ -123,14 +129,9 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
       const scale = OUTPUT_SIZE / CROP_SIZE;
 
       ctx.save();
-      // Move to center of output canvas
       ctx.translate(OUTPUT_SIZE / 2, OUTPUT_SIZE / 2);
-      // Translate by pan offset
       ctx.translate(pan.x * scale, pan.y * scale);
-      // Rotate
-      ctx.rotate((rotation * Math.PI) / 180);
 
-      // Draw image scaled
       const drawW = bw * zoom * scale;
       const drawH = bh * zoom * scale;
       ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
@@ -176,9 +177,9 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
         style={{
           background: "var(--card-bg, #ffffff)",
           color: "var(--text-primary, #1e293b)",
-          borderRadius: "18px",
+          borderRadius: "20px",
           width: "100%",
-          maxWidth: "440px",
+          maxWidth: "420px",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
           border: "1px solid var(--border-color, #e2e8f0)",
           overflow: "hidden",
@@ -187,24 +188,28 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Hidden File Input for changing photo */}
+        <input
+          type="file"
+          ref={modalFileInputRef}
+          style={{ display: "none" }}
+          accept="image/png, image/jpeg, image/webp, image/gif"
+          onChange={handleModalFileChange}
+        />
+
+        {/* Minimal Header */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "16px 20px",
+            padding: "14px 20px",
             borderBottom: "1px solid var(--border-color, #e2e8f0)",
           }}
         >
-          <div>
-            <h3 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
-              Adjust Profile Picture
-            </h3>
-            <p style={{ fontSize: "12px", color: "var(--text-tertiary, #64748b)", margin: "2px 0 0" }}>
-              Drag to reposition, zoom or rotate your photo
-            </p>
-          </div>
+          <h3 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
+            Profile Picture
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -221,18 +226,18 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
             }}
             aria-label="Close"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Viewport Area */}
+        {/* Clean Photo Viewport */}
         <div
           ref={containerRef}
           style={{
             position: "relative",
             width: "100%",
-            height: "300px",
-            background: "#090d16",
+            height: "290px",
+            background: "#080c14",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -244,11 +249,11 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
           onTouchStart={handleMouseDown}
           onWheel={handleWheel}
         >
-          {/* Draggable & Transformable Image */}
+          {/* Draggable Image */}
           <img
             ref={previewImgRef}
             src={imageSrc}
-            alt="Crop Preview"
+            alt="Profile Preview"
             draggable={false}
             onLoad={handleImageLoaded}
             style={{
@@ -256,7 +261,7 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
               maxHeight: "none",
               width: `${bw}px`,
               height: `${bh}px`,
-              transform: `translate(${pan.x}px, ${pan.y}px) rotate(${rotation}deg) scale(${zoom})`,
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
               transformOrigin: "center center",
               transition: isDragging ? "none" : "transform 0.05s ease-out",
               pointerEvents: "none",
@@ -265,194 +270,157 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApply }) {
             }}
           />
 
-          {/* Mask / Crop Circle Overlay */}
+          {/* Clean Circular Mask */}
           <div
             style={{
               position: "absolute",
               inset: 0,
               pointerEvents: "none",
-              boxShadow: `0 0 0 9999px rgba(9, 13, 22, 0.75)`,
+              boxShadow: `0 0 0 9999px rgba(8, 12, 20, 0.78)`,
               width: `${CROP_SIZE}px`,
               height: `${CROP_SIZE}px`,
               borderRadius: "50%",
-              border: "2.5px solid rgba(255, 255, 255, 0.95)",
+              border: "2px solid rgba(255, 255, 255, 0.95)",
               margin: "auto",
               boxSizing: "border-box",
             }}
-          >
-            {/* Center crosshair subtle guide */}
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: 0,
-                right: 0,
-                height: "1px",
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                pointerEvents: "none",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: 0,
-                bottom: 0,
-                width: "1px",
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                pointerEvents: "none",
-              }}
-            />
-          </div>
+          />
+        </div>
 
-          {/* Helper hint */}
-          <div
+        {/* Minimal Zoom Bar */}
+        <div style={{ padding: "12px 20px", display: "flex", alignItems: "center", gap: "10px" }}>
+          <button
+            type="button"
+            onClick={() => setZoom((prev) => Math.max(Number((prev - 0.1).toFixed(2)), 1))}
             style={{
-              position: "absolute",
-              bottom: "12px",
+              background: "transparent",
+              border: "none",
+              padding: "4px",
+              cursor: "pointer",
               display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              fontSize: "11px",
-              fontWeight: "600",
-              color: "rgba(255, 255, 255, 0.9)",
-              background: "rgba(0, 0, 0, 0.65)",
-              padding: "4px 12px",
-              borderRadius: "20px",
-              pointerEvents: "none",
-              backdropFilter: "blur(4px)",
+              color: "var(--text-secondary, #64748b)",
             }}
+            title="Zoom out"
           >
-            <Move size={12} />
-            <span>Drag image to position</span>
-          </div>
+            <ZoomOut size={16} />
+          </button>
+
+          <input
+            type="range"
+            min="1"
+            max="3"
+            step="0.05"
+            value={zoom}
+            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            style={{
+              flex: 1,
+              accentColor: "var(--accent, #38bdf8)",
+              cursor: "pointer",
+            }}
+          />
+
+          <button
+            type="button"
+            onClick={() => setZoom((prev) => Math.min(Number((prev + 0.1).toFixed(2)), 3))}
+            style={{
+              background: "transparent",
+              border: "none",
+              padding: "4px",
+              cursor: "pointer",
+              display: "flex",
+              color: "var(--text-secondary, #64748b)",
+            }}
+            title="Zoom in"
+          >
+            <ZoomIn size={16} />
+          </button>
         </div>
 
-        {/* Adjust Controls */}
-        <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
-          {/* Zoom Slider */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <button
-              type="button"
-              onClick={() => setZoom((prev) => Math.max(Number((prev - 0.1).toFixed(2)), 1))}
-              style={{
-                background: "var(--bg-secondary, #f1f5f9)",
-                border: "1px solid var(--border-color, #e2e8f0)",
-                borderRadius: "8px",
-                padding: "6px",
-                cursor: "pointer",
-                display: "flex",
-                color: "var(--text-primary, #1e293b)",
-              }}
-              title="Zoom out"
-            >
-              <ZoomOut size={16} />
-            </button>
-
-            <input
-              type="range"
-              min="1"
-              max="3"
-              step="0.05"
-              value={zoom}
-              onChange={(e) => setZoom(parseFloat(e.target.value))}
-              style={{
-                flex: 1,
-                accentColor: "var(--accent, #38bdf8)",
-                cursor: "pointer",
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={() => setZoom((prev) => Math.min(Number((prev + 0.1).toFixed(2)), 3))}
-              style={{
-                background: "var(--bg-secondary, #f1f5f9)",
-                border: "1px solid var(--border-color, #e2e8f0)",
-                borderRadius: "8px",
-                padding: "6px",
-                cursor: "pointer",
-                display: "flex",
-                color: "var(--text-primary, #1e293b)",
-              }}
-              title="Zoom in"
-            >
-              <ZoomIn size={16} />
-            </button>
-          </div>
-
-          {/* Toolbar Buttons: Rotate & Reset */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={handleRotate}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "12px",
-                  padding: "6px 12px",
-                }}
-              >
-                <RotateCw size={14} />
-                <span>Rotate 90°</span>
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={handleReset}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "12px",
-                  padding: "6px 12px",
-                }}
-              >
-                <RefreshCw size={14} />
-                <span>Reset</span>
-              </button>
-            </div>
-
-            <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-tertiary, #64748b)" }}>
-              {Math.round(zoom * 100)}%
-            </span>
-          </div>
-        </div>
-
-        {/* Footer Actions */}
+        {/* Clean Footer */}
         <div
           style={{
             display: "flex",
-            justifyContent: "flex-end",
-            gap: "10px",
-            padding: "12px 20px 16px",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "12px 18px",
             borderTop: "1px solid var(--border-color, #e2e8f0)",
+            background: "var(--bg-secondary, #f8fafc)",
           }}
         >
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleApplyCrop}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <Check size={16} strokeWidth={2} />
-            <span>Apply Photo</span>
-          </button>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              type="button"
+              onClick={() => modalFileInputRef.current?.click()}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "6px 10px",
+                fontSize: "12px",
+                fontWeight: "600",
+                borderRadius: "8px",
+                background: "var(--card-bg, #ffffff)",
+                border: "1px solid var(--border-color, #e2e8f0)",
+                color: "var(--text-primary)",
+                cursor: "pointer",
+              }}
+            >
+              <Camera size={13} />
+              <span>Change</span>
+            </button>
+
+            {(hasExistingPhoto || onRemove) && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onRemove) onRemove();
+                  onClose();
+                }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "6px 10px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  borderRadius: "8px",
+                  background: "transparent",
+                  border: "1px solid rgba(239, 68, 68, 0.25)",
+                  color: "var(--danger, #EF4444)",
+                  cursor: "pointer",
+                }}
+              >
+                <Trash2 size={13} />
+                <span>Remove</span>
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+              style={{ padding: "6px 12px", fontSize: "12px" }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleApplyCrop}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "6px 14px",
+                fontSize: "12px",
+              }}
+            >
+              <Check size={14} strokeWidth={2.5} />
+              <span>Done</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

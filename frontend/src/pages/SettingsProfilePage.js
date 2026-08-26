@@ -59,8 +59,7 @@ export default function SettingsProfilePage() {
     }
   }, [state.user]);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files?.[0];
+  const handleDirectFileSelect = (file) => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
@@ -85,19 +84,17 @@ export default function SettingsProfilePage() {
     reader.readAsDataURL(file);
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    handleDirectFileSelect(file);
+  };
+
   const handleAvatarClick = () => {
     if (avatar) {
       setRawSelectedImage(avatar);
       setIsCropModalOpen(true);
     } else {
       fileInputRef.current?.click();
-    }
-  };
-
-  const handleOpenAdjust = () => {
-    if (avatar) {
-      setRawSelectedImage(avatar);
-      setIsCropModalOpen(true);
     }
   };
 
@@ -108,10 +105,13 @@ export default function SettingsProfilePage() {
 
   const handleRemoveAvatar = () => {
     setAvatar(null);
+    setRawSelectedImage(null);
+    setIsCropModalOpen(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
+
 
   const hasChanges =
     (name.trim() !== (state.user?.name || "").trim()) ||
@@ -366,7 +366,7 @@ export default function SettingsProfilePage() {
                 onChange={handleImageUpload}
               />
 
-              {/* Avatar Info & Actions */}
+              {/* Avatar Info */}
               <div style={{ flex: 1, minWidth: "220px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
                   <h3
@@ -395,90 +395,17 @@ export default function SettingsProfilePage() {
 
                 <p
                   style={{
-                    fontSize: "12px",
+                    fontSize: "13px",
                     color: "var(--text-tertiary)",
-                    margin: "0 0 12px 0",
-                    lineHeight: "1.4",
+                    margin: 0,
+                    lineHeight: "1.45",
                   }}
                 >
-                  Click the photo to pan & zoom, or upload a new square photo (up to 10MB).
+                  Click your photo to upload a new picture, adjust framing & zoom, or remove it.
                 </p>
-
-                {/* Buttons */}
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-                  {avatar && (
-                    <button
-                      type="button"
-                      onClick={handleOpenAdjust}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "7px 12px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        borderRadius: "8px",
-                        background: "var(--bg-secondary)",
-                        color: "var(--text-primary)",
-                        border: "1px solid var(--border-color)",
-                        cursor: "pointer",
-                        transition: "all var(--transition-fast)",
-                      }}
-                      title="Adjust position, zoom, and framing"
-                    >
-                      <Crop size={13} strokeWidth={2} />
-                      <span>Adjust Framing</span>
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      padding: "7px 12px",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      borderRadius: "8px",
-                      background: avatar ? "var(--bg-secondary)" : "var(--accent)",
-                      color: avatar ? "var(--text-primary)" : "#FFFFFF",
-                      border: "1px solid var(--border-color)",
-                      cursor: "pointer",
-                      transition: "all var(--transition-fast)",
-                    }}
-                  >
-                    <Camera size={13} strokeWidth={2} />
-                    <span>{avatar ? "Upload New" : "Upload Photo"}</span>
-                  </button>
-
-                  {avatar && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveAvatar}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "7px 12px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        borderRadius: "8px",
-                        background: "transparent",
-                        color: "var(--danger, #EF4444)",
-                        border: "1px solid rgba(239, 68, 68, 0.25)",
-                        cursor: "pointer",
-                        transition: "all var(--transition-fast)",
-                      }}
-                    >
-                      <Trash2 size={13} strokeWidth={2} />
-                      <span>Remove</span>
-                    </button>
-                  )}
-                </div>
               </div>
             </div>
+
 
             {/* Form Fields Section */}
             <div style={{ paddingTop: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -749,8 +676,11 @@ export default function SettingsProfilePage() {
       <ImageCropModal
         isOpen={isCropModalOpen}
         imageSrc={rawSelectedImage}
+        hasExistingPhoto={Boolean(avatar)}
         onClose={() => setIsCropModalOpen(false)}
         onApply={handleCropApply}
+        onRemove={handleRemoveAvatar}
+        onSelectNewFile={handleDirectFileSelect}
       />
     </div>
   );
