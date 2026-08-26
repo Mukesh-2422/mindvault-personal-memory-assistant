@@ -19,6 +19,13 @@ try {
   }
 } catch {}
 
+const defaultAiPreferences = {
+
+  responseStyle: "concise", // 'concise' | 'detailed' | 'bullet'
+  onThisDayEnabled: true,
+  showSources: true,
+};
+
 const initialState = {
   memories: [],
   people: [],
@@ -26,6 +33,8 @@ const initialState = {
   chatMessages: [], // Starts clean on page refresh
   theme: "light",
   language: "en",
+  aiPreferences: defaultAiPreferences,
+  vaultAutoLock: "5m", // 'immediately' | '5m' | '15m' | '30m' | 'never'
   user: null,
   vaultLocked: true,
   vaultPasswordSet: false,
@@ -46,16 +55,33 @@ function appReducer(state, action) {
       return { ...state, chatMessages: [...(state.chatMessages || []), action.payload] };
     }
     case "CLEAR_CHAT_MESSAGES": {
+      try {
+        sessionStorage.removeItem(CHAT_SESSION_STORAGE_KEY);
+        sessionStorage.removeItem(CHAT_SESSION_ALT_KEY);
+      } catch {}
       return { ...state, chatMessages: [] };
     }
     case "SET_THEME":
       return { ...state, theme: action.payload };
     case "SET_LANGUAGE":
       return { ...state, language: action.payload };
+    case "SET_AI_PREFERENCES":
+      return { ...state, aiPreferences: { ...(state.aiPreferences || defaultAiPreferences), ...action.payload } };
+    case "SET_VAULT_AUTO_LOCK":
+      return { ...state, vaultAutoLock: action.payload };
+    case "IMPORT_MEMORIES": {
+      const incoming = Array.isArray(action.payload) ? action.payload : [];
+      const existingIds = new Set(state.memories.map((m) => m.id || m._id));
+      const uniqueNew = incoming
+        .filter((m) => m && !(m.id && existingIds.has(m.id)) && !(m._id && existingIds.has(m._id)))
+        .map((m) => ({ ...m, id: m.id || m._id || `imp_${Date.now()}_${Math.random().toString(36).substr(2, 6)}` }));
+      return { ...state, memories: [...uniqueNew, ...state.memories] };
+    }
     case "SET_LOADING":
       return { ...state, loading: action.payload };
     case "SET_ERROR":
       return { ...state, error: action.payload };
+
     case "AUTH_SUCCESS":
       return {
         ...state,
@@ -189,12 +215,22 @@ function appReducer(state, action) {
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Initialize theme from localStorage
+  // Initialize theme, language, AI preferences, and vault settings from localStorage
   useEffect(() => {
     const savedTheme = localStorage.getItem("mv_theme") || "light";
     const savedLanguage = localStorage.getItem("mv_language") || "en";
+    const savedAutoLock = localStorage.getItem("mv_vault_autolock") || "5m";
+    let savedAiPrefs = null;
+    try {
+      savedAiPrefs = JSON.parse(localStorage.getItem("mv_ai_prefs"));
+    } catch {}
+
     dispatch({ type: "SET_THEME", payload: savedTheme });
     dispatch({ type: "SET_LANGUAGE", payload: savedLanguage });
+    dispatch({ type: "SET_VAULT_AUTO_LOCK", payload: savedAutoLock });
+    if (savedAiPrefs && typeof savedAiPrefs === "object") {
+      dispatch({ type: "SET_AI_PREFERENCES", payload: savedAiPrefs });
+    }
     document.documentElement.setAttribute("data-theme", savedTheme);
   }, []);
 
@@ -208,6 +244,21 @@ export function AppProvider({ children }) {
   useEffect(() => {
     localStorage.setItem("mv_language", state.language);
   }, [state.language]);
+
+  // Update AI preferences in localStorage
+  useEffect(() => {
+    if (state.aiPreferences) {
+      localStorage.setItem("mv_ai_prefs", JSON.stringify(state.aiPreferences));
+    }
+  }, [state.aiPreferences]);
+
+  // Update Vault Auto Lock in localStorage
+  useEffect(() => {
+    if (state.vaultAutoLock) {
+      localStorage.setItem("mv_vault_autolock", state.vaultAutoLock);
+    }
+  }, [state.vaultAutoLock]);
+
 
   // Check auth on mount
   useEffect(() => {

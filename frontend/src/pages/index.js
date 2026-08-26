@@ -19,6 +19,10 @@ export { default as SettingsProfilePage } from "./SettingsProfilePage";
 export { default as SettingsSecurityPage } from "./SettingsSecurityPage";
 export { default as SettingsLanguagePage } from "./SettingsLanguagePage";
 export { default as SettingsAppearancePage } from "./SettingsAppearancePage";
+export { default as SettingsAIPage } from "./SettingsAIPage";
+export { default as SettingsDataPage } from "./SettingsDataPage";
+export { default as SettingsVaultSecurityPage } from "./SettingsVaultSecurityPage";
 export { default as VoiceMemoriesPage } from "./VoiceMemoriesPage";
 export { default as VaultResetPage } from "./VaultResetPage";
+
 

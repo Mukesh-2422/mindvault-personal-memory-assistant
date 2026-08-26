@@ -350,6 +350,52 @@ async function changePassword(req, res) {
   }
 }
 
+/**
+ * Permanently delete user account and all associated user data
+ */
+async function deleteAccount(req, res) {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ error: "Password confirmation is required to delete your account" });
+    }
+
+    const userId = req.user.id;
+    const user = await findOne("users", (u) => u.id === userId || u._id === userId || String(u.id) === String(userId) || String(u._id) === String(userId));
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const valid = bcrypt.compareSync(password, user.password);
+    if (!valid) {
+      return res.status(401).json({ error: "Incorrect password" });
+    }
+
+    // Delete all user memories
+    const allMemories = await getCollection("memories");
+    const remainingMemories = allMemories.filter((m) => m.userId !== userId && String(m.userId) !== String(userId));
+    await saveCollection("memories", remainingMemories);
+
+    // Delete all user people
+    const allPeople = await getCollection("people");
+    const remainingPeople = allPeople.filter((p) => p.userId !== userId && String(p.userId) !== String(userId));
+    await saveCollection("people", remainingPeople);
+
+    // Delete vault record
+    const allVaults = await getCollection("vaults");
+    const remainingVaults = allVaults.filter((v) => v.userId !== userId && String(v.userId) !== String(userId));
+    await saveCollection("vaults", remainingVaults);
+
+    // Delete user
+    await deleteOne("users", user.id || user._id);
+
+    res.json({ message: "Account and all associated memories have been permanently deleted." });
+  } catch (err) {
+    console.error("Error deleting account:", err);
+    res.status(500).json({ error: "Failed to delete account" });
+  }
+}
+
 module.exports = {
   register,
   login,
@@ -358,4 +404,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   changePassword,
+  deleteAccount,
 };

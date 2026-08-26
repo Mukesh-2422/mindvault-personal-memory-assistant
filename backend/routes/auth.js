@@ -14,6 +14,7 @@ const {
   forgotPassword,
   resetPassword,
   changePassword,
+  deleteAccount,
 } = require("../controllers/authController");
 
 const router = express.Router();
@@ -25,5 +26,6 @@ router.put("/reset-password/:token", resetPasswordLimiter, resetPassword);
 router.get("/me", authMiddleware, getProfile);
 router.put("/me", authMiddleware, updateProfile);
 router.put("/change-password", authMiddleware, changePassword);
+router.delete("/account", authMiddleware, deleteAccount);
 
 module.exports = router;

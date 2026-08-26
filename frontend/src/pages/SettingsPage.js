@@ -5,7 +5,7 @@ import { useApp } from "../context/AppContext";
 import { useAppBackNavigation } from "../utils/useAppBackNavigation";
 import {
   User, Lock, Globe, Sun, Trash2, LogOut, ChevronRight,
-  ArrowLeft,
+  ArrowLeft, Sparkles, Shield, Database,
 } from "lucide-react";
 import "../styles/global.css";
 import "../styles/pages.css";
@@ -14,21 +14,24 @@ const SETTINGS_SECTIONS = [
   {
     title: "PREFERENCES",
     items: [
-      { label: "Appearance", desc: "Manage theme and display preferences", icon: Sun, to: "/settings/appearance" },
-      { label: "Language", desc: "Choose your MindVault language", icon: Globe, to: "/settings/language" },
+      { label: "Appearance", desc: "Light, dark, or system theme", icon: Sun, to: "/settings/appearance" },
+      { label: "Language", desc: "English, Tamil, or Hindi", icon: Globe, to: "/settings/language" },
+      { label: "AI Assistant", desc: "Answer style and memory recall", icon: Sparkles, to: "/settings/ai" },
     ],
   },
   {
-    title: "ACCOUNT",
+    title: "ACCOUNT & SECURITY",
     items: [
-      { label: "Personal Information", desc: "Manage your name, email and profile", icon: User, to: "/settings/profile" },
-      { label: "Password & Security", desc: "Change password and manage security", icon: Lock, to: "/settings/security" },
+      { label: "Personal Info", desc: "Name and profile photo", icon: User, to: "/settings/profile" },
+      { label: "Security", desc: "Change account password", icon: Lock, to: "/settings/security" },
+      { label: "Vault Lock", desc: "Auto-lock timer and PIN", icon: Shield, to: "/settings/vault-security" },
     ],
   },
   {
-    title: "DATA",
+    title: "DATA & STORAGE",
     items: [
-      { label: "Recently Deleted", desc: "View and restore deleted memories", icon: Trash2, to: "/deleted" },
+      { label: "Backup & Data", desc: "Export, import, and storage", icon: Database, to: "/settings/data" },
+      { label: "Recently Deleted", desc: "Restore deleted memories", icon: Trash2, to: "/deleted" },
     ],
   },
 ];
@@ -39,7 +42,6 @@ export default function SettingsPage() {
   const goBack = useAppBackNavigation("/profile");
   const containerRef = useRef(null);
 
-  // Scroll to top on page mount and disable browser forceful scroll restoration
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";

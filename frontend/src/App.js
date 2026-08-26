@@ -25,9 +25,13 @@ import {
   SettingsSecurityPage,
   SettingsLanguagePage,
   SettingsAppearancePage,
+  SettingsAIPage,
+  SettingsDataPage,
+  SettingsVaultSecurityPage,
   VoiceMemoriesPage,
   VaultResetPage,
 } from "./pages";
+
 
 import "./styles/global.css";
 
@@ -231,6 +235,31 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/settings/ai"
+        element={
+          <ProtectedRoute>
+            <SettingsAIPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/data"
+        element={
+          <ProtectedRoute>
+            <SettingsDataPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/vault-security"
+        element={
+          <ProtectedRoute>
+            <SettingsVaultSecurityPage />
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="/voice-memories"
         element={

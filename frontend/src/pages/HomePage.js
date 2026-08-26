@@ -975,10 +975,11 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Memory Recall - On This Day (Only shown if memories exist) */}
-        {!isInitialLoading && hasMemories && onThisDay && (
+        {/* Memory Recall - On This Day (Only shown if memories exist and enabled in settings) */}
+        {!isInitialLoading && hasMemories && onThisDay && (state.aiPreferences?.onThisDayEnabled !== false) && (
           <div className="memory-recall-card" onClick={() => navigate(`/memory/${onThisDay.id || onThisDay._id}`, { state: { from: "/home" } })}>
             <div className="recall-header">
+
               <Sparkles size={16} strokeWidth={2} />
               <span className="recall-label">On This Day</span>
             </div>
@@ -1170,13 +1171,14 @@ export default function HomePage() {
                       </div>
 
                       {/* Render Universal REFERENCED MEMORIES Pills & Dynamic Previews */}
-                      {msg.role === "assistant" && displaySources.length > 0 && (
+                      {msg.role === "assistant" && displaySources.length > 0 && (state.aiPreferences?.showSources !== false) && (
                         <ChatSourcePillsGroup
                           memories={displaySources}
                           allMemories={state.memories}
                           onNavigate={navigate}
                         />
                       )}
+
 
                       <div className="chat-time">{formatTime(msg.timestamp)}</div>
                     </div>

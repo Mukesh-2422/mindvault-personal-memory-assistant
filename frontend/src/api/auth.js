@@ -40,3 +40,8 @@ export async function resetPassword(token, password) {
 export async function changePassword(currentPassword, newPassword) {
   return api.put("/auth/change-password", { currentPassword, newPassword });
 }
+
+export async function deleteAccount(password) {
+  return api.delete("/auth/account", { data: { password } });
+}
+
