@@ -159,87 +159,20 @@ export default function SettingsProfilePage() {
           width: "100%",
         }}
       >
-        {/* Top Back Navigation Bar */}
-        <div style={{ marginBottom: "20px" }}>
-          <button
-            type="button"
-            onClick={goBack}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "var(--card-bg)",
-              border: "1px solid var(--border-color)",
-              color: "var(--text-secondary)",
-              padding: "8px 14px",
-              borderRadius: "var(--radius-full)",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-              transition: "all var(--transition-fast)",
-              boxShadow: "var(--shadow-sm)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "var(--text-primary)";
-              e.currentTarget.style.borderColor = "var(--accent)";
-              e.currentTarget.style.transform = "translateX(-2px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "var(--text-secondary)";
-              e.currentTarget.style.borderColor = "var(--border-color)";
-              e.currentTarget.style.transform = "translateX(0)";
-            }}
-          >
-            <ArrowLeft size={15} strokeWidth={2} />
-            <span>Back to Profile</span>
-          </button>
-        </div>
+        <button className="back-btn" onClick={goBack} aria-label="Go back">
+          <ArrowLeft size={16} strokeWidth={1.5} />
+        </button>
 
-        {/* Page Header */}
-        <div style={{ marginBottom: "24px" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "4px 10px",
-              borderRadius: "var(--radius-full)",
-              background: "var(--accent-subtle)",
-              color: "var(--accent)",
-              fontSize: "11px",
-              fontWeight: "700",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              marginBottom: "8px",
-            }}
-          >
-            <ShieldCheck size={13} strokeWidth={2.5} />
-            <span>Account Settings</span>
+        <div className="settings-header">
+          <div className="settings-pill-badge">
+            <ShieldCheck size={12} strokeWidth={2.5} />
+            <span>Personal Info</span>
           </div>
-
-          <h1
-            style={{
-              fontFamily: "var(--font-heading)",
-              fontSize: "26px",
-              fontWeight: "800",
-              color: "var(--text-primary)",
-              letterSpacing: "-0.5px",
-              margin: "0 0 6px 0",
-            }}
-          >
-            Personal Information
-          </h1>
-          <p
-            style={{
-              fontSize: "14px",
-              color: "var(--text-secondary)",
-              margin: 0,
-              lineHeight: "1.5",
-            }}
-          >
-            Manage your personal identity, avatar image, and account profile details.
-          </p>
+          <h1 className="settings-title">Personal Information</h1>
+          <p className="settings-subtitle">Manage your name and profile picture.</p>
         </div>
+
+
 
         {/* Main Profile Card */}
         <div

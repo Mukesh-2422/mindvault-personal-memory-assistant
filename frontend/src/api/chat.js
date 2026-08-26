@@ -1,8 +1,9 @@
 import { api } from "./client";
 
-export async function sendMessage(content, selectedMemoryId = null, conversation = null, attachment = null) {
-  return api.post("/chat", { content, selectedMemoryId, conversation, attachment });
+export async function sendMessage(content, selectedMemoryId = null, conversation = null, attachment = null, responseStyle = "concise") {
+  return api.post("/chat", { content, selectedMemoryId, conversation, attachment, responseStyle });
 }
+
 
 /**
  * When the user clicks a source/memory card in the chat, call this

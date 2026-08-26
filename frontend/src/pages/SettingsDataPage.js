@@ -53,7 +53,6 @@ export default function SettingsDataPage() {
     setTimeout(() => setToast({ text: "", type: "success" }), 3000);
   };
 
-  // 1. Export Data as JSON
   const handleExportData = () => {
     try {
       const exportPayload = {
@@ -85,7 +84,6 @@ export default function SettingsDataPage() {
     }
   };
 
-  // 2. Import JSON Backup
   const handleFileImport = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -139,7 +137,6 @@ export default function SettingsDataPage() {
     reader.readAsText(file);
   };
 
-  // 3. Clear Chat History
   const handleClearChat = () => {
     if (window.confirm("Clear your chat conversation? Your saved memories will not be deleted.")) {
       dispatch({ type: "CLEAR_CHAT_MESSAGES" });
@@ -147,7 +144,6 @@ export default function SettingsDataPage() {
     }
   };
 
-  // 4. Delete Account
   const handleDeleteAccount = async () => {
     if (!deletePassword.trim()) {
       setDeleteError("Enter password to confirm.");
@@ -182,290 +178,260 @@ export default function SettingsDataPage() {
         </button>
 
         <div className="settings-header">
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "4px 10px",
-              borderRadius: "var(--radius-full)",
-              background: "var(--accent-subtle)",
-              color: "var(--accent)",
-              fontSize: "11px",
-              fontWeight: "700",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              marginBottom: "8px",
-            }}
-          >
-            <Database size={13} strokeWidth={2.5} />
+          <div className="settings-pill-badge">
+            <Database size={12} strokeWidth={2.5} />
             <span>Vault Data</span>
           </div>
           <h1 className="settings-title">Backup & Data</h1>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 4 }}>
+          <p className="settings-subtitle">
             Export, import, and manage your data.
           </p>
         </div>
 
+
         {/* Storage Breakdown Card */}
-        <p className="section-label">SAVED MEMORIES</p>
-        <div className="profile-section" style={{ padding: "16px" }}>
-          <div style={{ marginBottom: "12px" }}>
-            <div style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)" }}>
-              {activeMemories.length} Total Memories
-            </div>
-            <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>
-              Stored in your vault
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
-              gap: "8px",
-            }}
-          >
-            <div style={{ padding: "10px", borderRadius: "8px", background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: "8px" }}>
-              <FileText size={15} color="var(--accent)" />
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: "700" }}>{textCount}</div>
-                <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>Notes</div>
+        <div className="modern-settings-section">
+          <div className="modern-section-label">SAVED MEMORIES</div>
+          <div className="modern-settings-card" style={{ padding: "18px" }}>
+            <div style={{ marginBottom: "14px" }}>
+              <div style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)" }}>
+                {activeMemories.length} Total Memories
+              </div>
+              <div style={{ fontSize: "12.5px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                Stored safely in your personal vault
               </div>
             </div>
 
-            <div style={{ padding: "10px", borderRadius: "8px", background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Mic size={15} color="#10B981" />
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: "700" }}>{voiceCount}</div>
-                <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>Voice</div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
+                gap: "8px",
+              }}
+            >
+              <div style={{ padding: "10px", borderRadius: "10px", background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FileText size={16} color="var(--accent)" />
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "700" }}>{textCount}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Notes</div>
+                </div>
               </div>
-            </div>
 
-            <div style={{ padding: "10px", borderRadius: "8px", background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: "8px" }}>
-              <ImageIcon size={15} color="#F59E0B" />
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: "700" }}>{imageCount}</div>
-                <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>Photos</div>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: "8px" }}>
+                <Mic size={16} color="#10B981" />
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "700" }}>{voiceCount}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Voice</div>
+                </div>
               </div>
-            </div>
 
-            <div style={{ padding: "10px", borderRadius: "8px", background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: "8px" }}>
-              <CheckSquare size={15} color="#8B5CF6" />
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: "700" }}>{checklistCount}</div>
-                <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>Checklists</div>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: "8px" }}>
+                <ImageIcon size={16} color="#F59E0B" />
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "700" }}>{imageCount}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Photos</div>
+                </div>
               </div>
-            </div>
 
-            <div style={{ padding: "10px", borderRadius: "8px", background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Video size={15} color="#EC4899" />
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: "700" }}>{videoCount}</div>
-                <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>Videos</div>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: "8px" }}>
+                <CheckSquare size={16} color="#8B5CF6" />
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "700" }}>{checklistCount}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Checklists</div>
+                </div>
+              </div>
+
+              <div style={{ padding: "10px", borderRadius: "10px", background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: "8px" }}>
+                <Video size={16} color="#EC4899" />
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "700" }}>{videoCount}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Videos</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Backup & Restore Section */}
-        <p className="section-label" style={{ marginTop: "24px" }}>BACKUP & ACTIONS</p>
-        <div className="profile-section" style={{ padding: "8px 16px" }}>
-          {/* Export JSON Button */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "12px 0",
-              borderBottom: "1px solid var(--border-color)",
-              gap: "12px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "8px",
-                  background: "var(--bg-secondary)",
-                  color: "var(--accent)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+        {/* Backup & Actions */}
+        <div className="modern-settings-section">
+          <div className="modern-section-label">BACKUP & ACTIONS</div>
+          <div className="modern-settings-card">
+            {/* Export JSON Button */}
+            <div className="modern-toggle-row">
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "10px",
+                    background: "rgba(59, 130, 246, 0.1)",
+                    color: "var(--accent)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Download size={18} strokeWidth={2} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "14.5px", fontWeight: "600", color: "var(--text-primary)" }}>
+                    Export Backup
+                  </div>
+                  <div style={{ fontSize: "12.5px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    Download memories as a JSON file
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={handleExportData}
+                style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, borderRadius: "10px" }}
               >
-                <Download size={15} strokeWidth={2} />
-              </div>
-              <div>
-                <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>
-                  Export Backup
-                </div>
-                <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>
-                  Download memories as a JSON file
-                </div>
-              </div>
+                <Download size={13} />
+                <span>Export</span>
+              </button>
             </div>
 
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={handleExportData}
-              style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
-            >
-              <Download size={13} />
-              <span>Export</span>
-            </button>
-          </div>
+            {/* Import JSON Button */}
+            <div className="modern-toggle-row">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".json,application/json"
+                style={{ display: "none" }}
+                onChange={handleFileImport}
+              />
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "10px",
+                    background: "rgba(16, 185, 129, 0.1)",
+                    color: "#10B981",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Upload size={18} strokeWidth={2} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "14.5px", fontWeight: "600", color: "var(--text-primary)" }}>
+                    Import Backup
+                  </div>
+                  <div style={{ fontSize: "12.5px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    Restore memories from a JSON file
+                  </div>
+                </div>
+              </div>
 
-          {/* Import JSON Button */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "12px 0",
-              borderBottom: "1px solid var(--border-color)",
-              gap: "12px",
-            }}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".json,application/json"
-              style={{ display: "none" }}
-              onChange={handleFileImport}
-            />
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "8px",
-                  background: "var(--bg-secondary)",
-                  color: "#10B981",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing}
+                style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, borderRadius: "10px" }}
               >
-                <Upload size={15} strokeWidth={2} />
-              </div>
-              <div>
-                <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>
-                  Import Backup
-                </div>
-                <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>
-                  Restore memories from a JSON file
-                </div>
-              </div>
+                {importing ? <Loader2 size={13} className="spin" /> : <Upload size={13} />}
+                <span>{importing ? "Importing..." : "Import"}</span>
+              </button>
             </div>
 
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importing}
-              style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
-            >
-              {importing ? <Loader2 size={13} className="spin" /> : <Upload size={13} />}
-              <span>{importing ? "Importing..." : "Import"}</span>
-            </button>
-          </div>
+            {/* Clear AI Chat */}
+            <div className="modern-toggle-row">
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "10px",
+                    background: "var(--bg-secondary)",
+                    color: "var(--text-secondary)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Trash2 size={18} strokeWidth={2} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "14.5px", fontWeight: "600", color: "var(--text-primary)" }}>
+                    Clear Chat
+                  </div>
+                  <div style={{ fontSize: "12.5px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    Reset home page conversation
+                  </div>
+                </div>
+              </div>
 
-          {/* Clear AI Chat */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "12px 0",
-              gap: "12px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "8px",
-                  background: "var(--bg-secondary)",
-                  color: "var(--text-secondary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={handleClearChat}
+                style={{ flexShrink: 0, borderRadius: "10px" }}
               >
-                <Trash2 size={15} strokeWidth={2} />
-              </div>
-              <div>
-                <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>
-                  Clear Chat
-                </div>
-                <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>
-                  Reset home page conversation
-                </div>
-              </div>
+                Clear
+              </button>
             </div>
-
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={handleClearChat}
-              style={{ flexShrink: 0 }}
-            >
-              Clear
-            </button>
           </div>
         </div>
 
         {/* Danger Zone */}
-        <p className="section-label" style={{ marginTop: "24px", color: "var(--danger, #EF4444)" }}>
-          DANGER ZONE
-        </p>
-        <div
-          className="profile-section"
-          style={{
-            padding: "16px",
-            border: "1px solid rgba(239, 68, 68, 0.3)",
-            background: "rgba(239, 68, 68, 0.03)",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-            <div>
-              <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--danger, #EF4444)" }}>
-                Delete Account
+        <div className="modern-settings-section" style={{ marginTop: "32px" }}>
+          <div className="modern-section-label" style={{ color: "var(--danger, #EF4444)" }}>
+            DANGER ZONE
+          </div>
+          <div
+            className="modern-settings-card"
+            style={{
+              padding: "16px 18px",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+              background: "rgba(239, 68, 68, 0.02)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+              <div>
+                <div style={{ fontSize: "14.5px", fontWeight: "700", color: "var(--danger, #EF4444)" }}>
+                  Delete Account
+                </div>
+                <div style={{ fontSize: "12.5px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                  Permanently remove your account and all memories.
+                </div>
               </div>
-              <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
-                Permanently remove your account and all memories.
-              </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setDeletePassword("");
-                setDeleteError("");
-                setShowDeleteModal(true);
-              }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                background: "var(--danger, #EF4444)",
-                color: "#ffffff",
-                border: "none",
-                fontSize: "12px",
-                fontWeight: "700",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              <Trash2 size={13} />
-              <span>Delete</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDeletePassword("");
+                  setDeleteError("");
+                  setShowDeleteModal(true);
+                }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 14px",
+                  borderRadius: "10px",
+                  background: "var(--danger, #EF4444)",
+                  color: "#ffffff",
+                  border: "none",
+                  fontSize: "12.5px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                  boxShadow: "0 2px 8px rgba(239, 68, 68, 0.3)",
+                }}
+              >
+                <Trash2 size={13} />
+                <span>Delete</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -488,7 +454,7 @@ export default function SettingsDataPage() {
             <div
               style={{
                 background: "var(--card-bg, #ffffff)",
-                borderRadius: "16px",
+                borderRadius: "18px",
                 width: "100%",
                 maxWidth: "400px",
                 border: "1px solid var(--border-color)",
@@ -534,7 +500,7 @@ export default function SettingsDataPage() {
                 )}
               </div>
 
-              <div style={{ padding: "12px 20px", borderTop: "1px solid var(--border-color)", display: "flex", justifyContent: "flex-end", gap: "10px", background: "var(--bg-secondary)" }}>
+              <div style={{ padding: "14px 20px", borderTop: "1px solid var(--border-color)", display: "flex", justifyContent: "flex-end", gap: "10px", background: "var(--bg-secondary)" }}>
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"

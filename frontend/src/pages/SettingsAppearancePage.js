@@ -7,9 +7,9 @@ import "../styles/global.css";
 import "../styles/pages.css";
 
 const THEMES = [
-  { label: "Light", value: "light", icon: Sun },
-  { label: "Dark", value: "dark", icon: Moon },
-  { label: "System", value: "system", icon: Monitor },
+  { label: "Light", value: "light", desc: "Clean bright theme", icon: Sun, iconColor: "#F59E0B", iconBg: "rgba(245, 158, 11, 0.08)" },
+  { label: "Dark", value: "dark", desc: "Easy on the eyes in dark rooms", icon: Moon, iconColor: "#8B5CF6", iconBg: "rgba(139, 92, 246, 0.08)" },
+  { label: "System", value: "system", desc: "Matches your device theme automatically", icon: Monitor, iconColor: "#3B82F6", iconBg: "rgba(59, 130, 246, 0.08)" },
 ];
 
 export default function SettingsAppearancePage() {
@@ -40,29 +40,74 @@ export default function SettingsAppearancePage() {
         </button>
 
         <div className="settings-header">
+          <div className="settings-pill-badge">
+            <Sun size={12} strokeWidth={2.5} />
+            <span>Appearance</span>
+          </div>
           <h1 className="settings-title">Appearance</h1>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 4 }}>Manage theme and display preferences</p>
+          <p className="settings-subtitle">Manage theme and display preferences.</p>
         </div>
 
-        <div className="profile-section">
-          {THEMES.map((t) => {
-            const Icon = t.icon;
-            return (
-              <div
-                key={t.value}
-                className={`lang-option ${state.theme === t.value ? "active" : ""}`}
-                onClick={() => handleSelect(t.value)}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <Icon size={16} strokeWidth={1.5} />
-                  <span>{t.label}</span>
+
+        <div className="modern-settings-section">
+          <div className="modern-section-label">THEME MODE</div>
+          <div className="modern-settings-card">
+            {THEMES.map((t) => {
+              const Icon = t.icon;
+              const isSelected = state.theme === t.value;
+              return (
+                <div
+                  key={t.value}
+                  onClick={() => handleSelect(t.value)}
+                  className={`seamless-option-row ${isSelected ? "selected" : ""}`}
+                >
+                  <div className="seamless-row-left">
+                    <div
+                      className="seamless-row-icon"
+                      style={{ background: t.iconBg, color: t.iconColor }}
+                    >
+                      <Icon size={16} strokeWidth={2} />
+                    </div>
+                    <div>
+                      <div className="seamless-row-title">{t.label}</div>
+                      <div className="seamless-row-desc">{t.desc}</div>
+                    </div>
+                  </div>
+
+                  {isSelected ? (
+                    <div
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "50%",
+                        background: "var(--accent)",
+                        color: "#ffffff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        borderRadius: "50%",
+                        border: "1.5px solid var(--border-color)",
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
                 </div>
-                {state.theme === t.value && <span className="lang-check"><Check size={18} strokeWidth={2} /></span>}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-        <div style={{ height: 20 }} />
+
+        <div style={{ height: 40 }} />
       </div>
     </div>
   );

@@ -327,7 +327,8 @@ export function AppProvider({ children }) {
 
   const processChat = useCallback(async (userMessage, selectedMemoryId = null, conversation = null, attachment = null) => {
     try {
-      const result = await chatApi.sendMessage(userMessage, selectedMemoryId, conversation, attachment);
+      const responseStyle = state.aiPreferences?.responseStyle || "concise";
+      const result = await chatApi.sendMessage(userMessage, selectedMemoryId, conversation, attachment, responseStyle);
       // Refresh memories in background in case new links were formed
       memoriesApi.getMemories().then((memories) => {
         dispatch({ type: "SET_MEMORIES", payload: memories });
@@ -337,7 +338,8 @@ export function AppProvider({ children }) {
       console.error("Chat error:", err);
       return { error: err.message || "Something went wrong. Please try again." };
     }
-  }, []);
+  }, [state.aiPreferences]);
+
 
   const selectMemoryContext = useCallback(async (memoryId, userQuery = "") => {
     try {

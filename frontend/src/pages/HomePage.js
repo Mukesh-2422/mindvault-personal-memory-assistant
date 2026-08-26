@@ -896,13 +896,14 @@ export default function HomePage() {
     }
   };
 
-  const handleSend = () => {
+  const handleSend = (overrideText = null) => {
     if (isVoiceRecording) {
       finishVoiceSearch(true);
     } else {
-      submitMessage(input, attachedFile);
+      submitMessage(typeof overrideText === "string" ? overrideText : input, attachedFile);
     }
   };
+
 
   const handleSelectMemory = async (memoryId, memoryObj = null) => {
     if (isSubmittingRef.current) return;
@@ -1126,8 +1127,55 @@ export default function HomePage() {
             <h1 className="hero-title">MindVault</h1>
             <p className="hero-subtitle">Your Second Brain</p>
             <p className="hero-prompt">What would you like to remember today?</p>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: "8px",
+                marginTop: "16px",
+                maxWidth: "480px",
+              }}
+            >
+              {[
+                { label: "✨ Summarize my memories", query: "Summarize my saved memories" },
+                { label: "📝 Recent notes", query: "What are my recent notes?" },
+                { label: "🗓️ This month", query: "What did I save this month?" },
+                { label: "💡 Key reminders", query: "What are my important reminders?" },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => handleSend(item.query)}
+                  style={{
+                    background: "var(--card-bg, #ffffff)",
+                    border: "1px solid var(--border-color)",
+                    color: "var(--text-primary)",
+                    padding: "8px 14px",
+                    borderRadius: "20px",
+                    fontSize: "13px",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    boxShadow: "var(--shadow-sm)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--accent)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-color)";
+                    e.currentTarget.style.transform = "none";
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
+
 
         {/* Chat Messages */}
         {messages.length > 0 && (

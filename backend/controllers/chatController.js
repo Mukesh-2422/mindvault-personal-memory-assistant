@@ -1356,7 +1356,9 @@ async function processChatLogic(userMessage, userId, selectedMemoryId = null, co
       // ── SINGLE-STEP DIRECT AI ANSWER VIA GROQ LLM OR DIRECT SYNTHESIS ──
       // Pass all candidate memories directly to Groq LLM for synthesis
       const conversationHistory = context?.conversation || [];
-      const groqAnswer = await synthesizeWithGroqLLM(usedQuery, deduped, conversationHistory);
+      const responseStyle = context?.responseStyle || "concise";
+      const groqAnswer = await synthesizeWithGroqLLM(usedQuery, deduped, conversationHistory, responseStyle);
+
 
       if (groqAnswer) {
         response = groqAnswer;
@@ -1392,11 +1394,7 @@ async function processChatLogic(userMessage, userId, selectedMemoryId = null, co
   return { response, relatedMemories, selectedMemoryInfo, requiresSelection: false };
 }
 
-/**
- * Single-step direct answer synthesis via Groq LLM (llama-3.3-70b-versatile)
- * with graceful fallback to OpenAI or deterministic synthesis.
- */
-async function synthesizeWithGroqLLM(userQuery, candidateMemories, conversationHistory = []) {
+async function synthesizeWithGroqLLM(userQuery, candidateMemories, conversationHistory = [], responseStyle = "concise") {
   const groqApiKey = process.env.GROQ_API_KEY;
   const openaiApiKey = process.env.OPENAI_API_KEY;
 
@@ -1408,6 +1406,13 @@ async function synthesizeWithGroqLLM(userQuery, candidateMemories, conversationH
     return `[Memory ${idx + 1}] Title: ${m.title || "Untitled"}\nContent: ${m.content || "No text content"}\nType: ${m.type || "text"}\nDate: ${m.createdAt || m.date || "Unknown"}\nTags: ${(m.tags || []).join(", ") || "None"}`;
   }).join("\n\n");
 
+  let formatInstruction = "Be concise, direct, natural, and helpful.";
+  if (responseStyle === "bullet") {
+    formatInstruction = "Format your answer with clear, structured bullet points (- or •) highlighting key facts, dates, and people.";
+  } else if (responseStyle === "detailed") {
+    formatInstruction = "Provide a comprehensive, detailed answer with full context, background, and explanations from the memories.";
+  }
+
   const systemPrompt = `You are MindVault's intelligent second-brain assistant.
 The user is asking a question to recall information from their personal memory vault.
 Below are the relevant memories retrieved from their vault:
@@ -1416,9 +1421,10 @@ ${memoryContext}
 
 INSTRUCTIONS:
 1. Directly and clearly answer the user's question using the provided memory context.
-2. Be concise, direct, natural, and helpful. Do NOT ask intermediate questions or prompt the user to choose unless absolutely necessary.
+2. ${formatInstruction}
 3. If the user asks for a specific fact (e.g., birthday, date, password, code, place, list), state that fact immediately and accurately.
 4. Only rely on facts present in the provided memories.`;
+
 
   const messages = [
     { role: "system", content: systemPrompt },
@@ -1489,7 +1495,7 @@ INSTRUCTIONS:
 
 async function sendChatMessage(req, res) {
   try {
-    const { content, selectedMemoryId, conversation, attachment } = req.body;
+    const { content, selectedMemoryId, conversation, attachment, responseStyle } = req.body;
     if (!content) return res.status(400).json({ error: "Message content required" });
 
     const userId = req.user.id;
@@ -1499,8 +1505,9 @@ async function sendChatMessage(req, res) {
       content,
       userId,
       selectedMemoryId,
-      { conversation: priorMessages, attachment }
+      { conversation: priorMessages, attachment, responseStyle }
     );
+
 
     const userMsg = {
       id: generateId(),

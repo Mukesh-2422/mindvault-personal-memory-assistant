@@ -7,9 +7,9 @@ import "../styles/global.css";
 import "../styles/pages.css";
 
 const LANGUAGES = [
-  { label: "English", value: "en" },
-  { label: "தமிழ்", value: "ta" },
-  { label: "हिन्दी", value: "hi" },
+  { label: "English", sub: "English (Default)", value: "en" },
+  { label: "தமிழ்", sub: "Tamil", value: "ta" },
+  { label: "हिन्दी", sub: "Hindi", value: "hi" },
 ];
 
 export default function SettingsLanguagePage() {
@@ -40,26 +40,64 @@ export default function SettingsLanguagePage() {
         </button>
 
         <div className="settings-header">
+          <div className="settings-pill-badge">
+            <Globe size={12} strokeWidth={2.5} />
+            <span>Language</span>
+          </div>
           <h1 className="settings-title">Language</h1>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 4 }}>Choose your MindVault language</p>
+          <p className="settings-subtitle">Choose your preferred app language.</p>
         </div>
 
-        <div className="profile-section">
-          {LANGUAGES.map((l) => (
-            <div
-              key={l.value}
-              className={`lang-option ${state.language === l.value ? "active" : ""}`}
-              onClick={() => handleSelect(l.value)}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Globe size={16} strokeWidth={1.5} />
-                <span>{l.label}</span>
-              </div>
-              {state.language === l.value && <span className="lang-check"><Check size={18} strokeWidth={2} /></span>}
-            </div>
-          ))}
+
+        <div className="modern-settings-section">
+          <div className="modern-section-label">AVAILABLE LANGUAGES</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {LANGUAGES.map((l) => {
+              const isSelected = state.language === l.value;
+              return (
+                <div
+                  key={l.value}
+                  onClick={() => handleSelect(l.value)}
+                  className={`modern-option-tile ${isSelected ? "selected" : ""}`}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                    <div className="modern-tile-icon">
+                      <Globe size={18} strokeWidth={2} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "14.5px", fontWeight: "600", color: "var(--text-primary)" }}>
+                        {l.label}
+                      </div>
+                      <div style={{ fontSize: "12.5px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                        {l.sub}
+                      </div>
+                    </div>
+                  </div>
+
+                  {isSelected && (
+                    <div
+                      style={{
+                        width: "22px",
+                        height: "22px",
+                        borderRadius: "50%",
+                        background: "var(--accent)",
+                        color: "#ffffff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 2px 6px rgba(37, 99, 235, 0.3)",
+                      }}
+                    >
+                      <Check size={13} strokeWidth={3} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div style={{ height: 20 }} />
+
+        <div style={{ height: 40 }} />
       </div>
     </div>
   );

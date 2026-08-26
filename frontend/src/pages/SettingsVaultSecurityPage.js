@@ -58,123 +58,113 @@ export default function SettingsVaultSecurityPage() {
         </button>
 
         <div className="settings-header">
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "4px 10px",
-              borderRadius: "var(--radius-full)",
-              background: "var(--accent-subtle)",
-              color: "var(--accent)",
-              fontSize: "11px",
-              fontWeight: "700",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              marginBottom: "8px",
-            }}
-          >
-            <Shield size={13} strokeWidth={2.5} />
+          <div className="settings-pill-badge">
+            <Shield size={12} strokeWidth={2.5} />
             <span>Vault Security</span>
           </div>
           <h1 className="settings-title">Vault Lock</h1>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 4 }}>
+          <p className="settings-subtitle">
             Choose auto-lock timer and manage vault security.
           </p>
         </div>
 
+
         {/* Vault Status Summary */}
-        <p className="section-label">VAULT PIN</p>
-        <div className="profile-section" style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div
-              style={{
-                width: "34px",
-                height: "34px",
-                borderRadius: "8px",
-                background: state.vaultPasswordSet ? "rgba(16, 185, 129, 0.1)" : "var(--bg-secondary)",
-                color: state.vaultPasswordSet ? "#10B981" : "var(--text-secondary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Lock size={16} strokeWidth={2} />
-            </div>
-            <div>
-              <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)" }}>
-                {state.vaultPasswordSet ? "PIN Active" : "No PIN Set"}
-              </div>
-              <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>
-                {state.vaultPasswordSet ? "Private memories are locked with PIN" : "Set a PIN to lock private memories"}
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={() => navigate("/vault")}
-            style={{ display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            <KeyRound size={13} />
-            <span>Open Vault</span>
-            <ExternalLink size={12} />
-          </button>
-        </div>
-
-        {/* Auto Lock Timer Options */}
-        <p className="section-label" style={{ marginTop: "24px" }}>AUTO-LOCK TIMER</p>
-        <div className="profile-section" style={{ display: "flex", flexDirection: "column", gap: "6px", padding: "12px" }}>
-          {AUTO_LOCK_OPTIONS.map((opt) => {
-            const isSelected = currentAutoLock === opt.id;
-            return (
+        <div className="modern-settings-section">
+          <div className="modern-section-label">VAULT PIN</div>
+          <div className="modern-settings-card" style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <div
-                key={opt.id}
-                onClick={() => handleSelectAutoLock(opt.id)}
                 style={{
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "8px",
+                  background: state.vaultPasswordSet ? "rgba(16, 185, 129, 0.1)" : "var(--bg-secondary)",
+                  color: state.vaultPasswordSet ? "#10B981" : "var(--text-secondary)",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  background: isSelected ? "var(--bg-secondary)" : "transparent",
-                  border: isSelected ? "1.5px solid var(--accent)" : "1px solid transparent",
-                  cursor: "pointer",
-                  transition: "all var(--transition-fast)",
+                  justifyContent: "center",
+                  flexShrink: 0,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <Clock size={15} color={isSelected ? "var(--accent)" : "var(--text-tertiary)"} />
-                  <div>
-                    <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)" }}>
-                      {opt.label}
-                    </div>
-                    <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginTop: "1px" }}>
-                      {opt.desc}
-                    </div>
-                  </div>
-                </div>
-
-                {isSelected && (
-                  <div
-                    style={{
-                      width: "18px",
-                      height: "18px",
-                      borderRadius: "50%",
-                      background: "var(--accent)",
-                      color: "#ffffff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Check size={11} strokeWidth={3} />
-                  </div>
-                )}
+                <Lock size={16} strokeWidth={2} />
               </div>
-            );
-          })}
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>
+                  {state.vaultPasswordSet ? "PIN Active" : "No PIN Set"}
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                  {state.vaultPasswordSet ? "Private memories are locked with PIN" : "Set a PIN to lock private memories"}
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => navigate("/vault")}
+              style={{ display: "flex", alignItems: "center", gap: "6px", borderRadius: "8px" }}
+            >
+              <KeyRound size={13} />
+              <span>Open Vault</span>
+              <ExternalLink size={12} />
+            </button>
+          </div>
+        </div>
+
+        {/* Auto Lock Timer Options - Mild Seamless Card */}
+        <div className="modern-settings-section">
+          <div className="modern-section-label">AUTO-LOCK TIMER</div>
+          <div className="modern-settings-card">
+            {AUTO_LOCK_OPTIONS.map((opt) => {
+              const isSelected = currentAutoLock === opt.id;
+              return (
+                <div
+                  key={opt.id}
+                  onClick={() => handleSelectAutoLock(opt.id)}
+                  className={`seamless-option-row ${isSelected ? "selected" : ""}`}
+                >
+                  <div className="seamless-row-left">
+                    <div className="seamless-row-icon">
+                      <Clock size={16} strokeWidth={2} />
+                    </div>
+                    <div>
+                      <div className="seamless-row-title">{opt.label}</div>
+                      <div className="seamless-row-desc">{opt.desc}</div>
+                    </div>
+                  </div>
+
+                  {isSelected ? (
+                    <div
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "50%",
+                        background: "var(--accent)",
+                        color: "#ffffff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        borderRadius: "50%",
+                        border: "1.5px solid var(--border-color)",
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Toast */}
