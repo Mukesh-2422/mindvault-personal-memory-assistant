@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { formatFullDate, formatTime, formatMemoryDateTime } from "../utils/helpers";
 import { useAppBackNavigation } from "../utils/useAppBackNavigation";
-import { createMemory, updateMemory } from "../api/memories";
+import { createMemory, updateMemory, getMemory } from "../api/memories";
 import { uploadFile } from "../api/client";
 import { uploadVoiceMemory } from "../api/voice";
 import { encryptMemory } from "../lib/crypto";
@@ -92,6 +92,7 @@ export default function NewMemoryPage() {
         });
     }
   }, [editId, existingMemory]);
+
   const moreRef = useRef(null);
   const titleRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -135,7 +136,6 @@ export default function NewMemoryPage() {
     };
   }, [audioUrl]);
 
-
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -160,98 +160,69 @@ export default function NewMemoryPage() {
       const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
       mediaRecorderRef.current = recorder;
       audioChunksRef.current = [];
-      setRecording(true);
-      setRecordingDuration(0);
 
       recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          audioChunksRef.current.push(e.data);
-        }
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
 
       recorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        const url = URL.createObjectURL(blob);
         setAudioBlob(blob);
-        setAudioUrl(url);
-        setRecording(false);
+        setAudioUrl(URL.createObjectURL(blob));
         stream.getTracks().forEach((t) => t.stop());
       };
 
-      recorder.onerror = (event) => {
-        console.error("Recording error:", event.error);
-        setRecording(false);
-        stream.getTracks().forEach((t) => t.stop());
-        alert("Recording error occurred. Please try again.");
-      };
+      recorder.start(200);
+      setRecording(true);
+      setRecordingDuration(0);
 
-      recorder.start();
       recordingTimerRef.current = setInterval(() => {
-        setRecordingDuration((d) => d + 1);
+        setRecordingDuration((prev) => prev + 1);
       }, 1000);
     } catch (err) {
-      console.error("Error starting recording:", err);
-      if (err.name === "NotAllowedError") {
-        alert("Microphone access denied. Please allow microphone permissions.");
-      } else if (err.name === "NotFoundError") {
-        alert("No microphone found. Please connect a microphone and try again.");
-      } else {
-        alert("Failed to start recording. Please try again.");
-      }
+      console.error("Failed to start recording:", err);
+      alert("Microphone access is required to record voice notes.");
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+    if (mediaRecorderRef.current && recording) {
       mediaRecorderRef.current.stop();
+      setRecording(false);
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
       }
     }
   };
 
-  const formatDuration = (sec) => {
-    const hrs = Math.floor(sec / 3600);
-    const mins = Math.floor((sec % 3600) / 60);
-    const s = sec % 60;
-    if (hrs > 0) {
-      return `${hrs}:${mins.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-    }
-    return `${mins}:${s.toString().padStart(2, "0")}`;
+  const formatDuration = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
   const handleVaultToggle = () => {
+    setSaveToVault(!saveToVault);
     setMoreOpen(false);
-    if (saveToVault) {
-      // Make Public — no password needed
-      setSaveToVault(false);
-    } else {
-      // Make it Private
-      if (!state.vaultPasswordSet || state.vaultLocked) {
-        // Vault not created or locked — navigate to vault page for password setup
-        navigate("/vault");
-      } else {
-        // Vault already unlocked — just toggle
-        setSaveToVault(true);
-      }
-    }
   };
 
   const handleSave = async () => {
-    if (!title && !content && !selectedFile && !audioBlob && checklist.every((c) => !c.text)) return;
-    if (saving) return;
+    if (!title.trim() && !content.trim() && !selectedFile && !mediaData && !audioBlob && checklist.every((c) => !c.text)) {
+      setSaveError("Please enter a title, content, or attach a file.");
+      return;
+    }
+
     setSaving(true);
     setSaveError("");
 
     try {
       let finalMediaUrl = mediaUrl;
-      let finalDuration = null;
+      let finalDuration = recordingDuration > 0 ? formatDuration(recordingDuration) : null;
       let uploadedMedia = null;
 
       // Voice: record or uploaded audio file
       if (type === "voice") {
         if (audioBlob) {
-          // Recorded audio
           const formData = new FormData();
           formData.append("audio", audioBlob, `recording_${Date.now()}.webm`);
           formData.append("title", title || "Voice Memory");
@@ -263,7 +234,6 @@ export default function NewMemoryPage() {
           navigate("/home");
           return;
         } else if (selectedFile) {
-          // Uploaded audio file — use general upload, set duration if available
           uploadedMedia = await uploadFile(selectedFile);
           finalMediaUrl = uploadedMedia.url;
           finalDuration = recordingDuration > 0 ? formatDuration(recordingDuration) : null;
@@ -295,7 +265,6 @@ export default function NewMemoryPage() {
         if (state.vaultPin) {
           memoryData = await encryptMemory(memoryData, state.vaultPin);
         } else {
-          // Vault PIN not set in current session, ask user for PIN to encrypt
           pendingSaveRef.current = memoryData;
           setShowPinModal(true);
           setSaving(false);
@@ -344,57 +313,41 @@ export default function NewMemoryPage() {
     }
   };
 
-
   const addChecklistItem = () => {
     setChecklist([...checklist, { id: `cl_${Date.now()}`, text: "", done: false }]);
   };
 
-  const updateChecklistItem = (id, key, val) => {
-    setChecklist(checklist.map((c) => (c.id === id ? { ...c, [key]: val } : c)));
+  const updateChecklistItem = (id, field, val) => {
+    setChecklist(
+      checklist.map((item) => (item.id === id ? { ...item, [field]: val } : item))
+    );
   };
 
   const removeChecklistItem = (id) => {
-    setChecklist(checklist.filter((c) => c.id !== id));
-  };
-
-  const getTypeIcon = (t = type) => {
-    const props = { size: 20, strokeWidth: 1.5 };
-    switch (t) {
-      case "voice": return <Mic {...props} />;
-      case "image": return <Image {...props} />;
-      case "video": return <Video {...props} />;
-      case "checklist": return <CheckSquare {...props} />;
-      default: return <FileText {...props} />;
-    }
+    if (checklist.length <= 1) return;
+    setChecklist(checklist.filter((item) => item.id !== id));
   };
 
   return (
-    <div className="new-memory-page">
+    <div className="memory-editor">
       <nav className="memory-editor-nav">
         <div className="editor-nav-left">
-          <button className="editor-nav-btn" onClick={goBack} aria-label="Go back">
-            <ArrowLeft size={16} strokeWidth={1.5} />
+          <button className="editor-nav-btn" onClick={goBack} aria-label="Go back" title="Go back">
+            <ArrowLeft size={18} strokeWidth={1.5} />
           </button>
         </div>
 
-        <div className="editor-nav-center">
-          {draftSaved ? (
-            <span className="draft-status">
-              <Check size={14} strokeWidth={2} />
-              Draft Saved
-            </span>
-          ) : (
-            <span style={{ display: "flex" }}>{getTypeIcon()}</span>
-          )}
-        </div>
-
         <div className="editor-nav-right">
+
+          {draftSaved && <span className="draft-indicator">Draft saved</span>}
+
           <div style={{ position: "relative" }} ref={moreRef}>
-            <button className="editor-nav-btn" onClick={() => setMoreOpen(!moreOpen)}>
-              <MoreHorizontal size={16} strokeWidth={1.5} />
+            <button className="editor-nav-btn" onClick={() => setMoreOpen(!moreOpen)} title="Options">
+              <MoreHorizontal size={18} strokeWidth={1.5} />
             </button>
+
             {moreOpen && (
-              <div className="dropdown-menu" style={{ right: 0, top: "calc(100% + 4px)", minWidth: 200 }}>
+              <div className="dropdown-menu" style={{ right: 0, top: "100%" }}>
                 <button className="dropdown-item" onClick={() => { setPinned(!pinned); setMoreOpen(false); }}>
                   <Pin size={16} strokeWidth={1.5} />
                   {pinned ? "Unpin" : "Pin"}
@@ -402,10 +355,6 @@ export default function NewMemoryPage() {
                 <button className="dropdown-item" onClick={handleVaultToggle}>
                   <Lock size={16} strokeWidth={1.5} />
                   {saveToVault ? "Make Public" : "Make it Private"}
-                </button>
-                <button className="dropdown-item">
-                  <Download size={16} strokeWidth={1.5} />
-                  Export
                 </button>
                 <button className="dropdown-item danger" onClick={goBack}>
                   <Trash2 size={16} strokeWidth={1.5} />
@@ -415,16 +364,20 @@ export default function NewMemoryPage() {
             )}
           </div>
 
-          <button className="editor-nav-btn" onClick={() => setPinned(!pinned)} title="Pin" style={{ color: pinned ? "#EAB308" : undefined }}>
-            <Pin size={16} strokeWidth={1.5} />
-          </button>
-
-          <button className="editor-nav-btn save-btn" onClick={handleSave} disabled={saving}>
-            <Save size={16} strokeWidth={1.5} />
-            {saving ? "Saving..." : "Save"}
+          <button
+            className="editor-nav-btn"
+            onClick={handleSave}
+            disabled={saving}
+            aria-label="Save"
+            title="Save"
+            style={{ color: "var(--accent)" }}
+          >
+            <Check size={20} strokeWidth={2.2} />
           </button>
         </div>
       </nav>
+
+
 
 
       <div className="memory-editor-content">
@@ -433,6 +386,7 @@ export default function NewMemoryPage() {
             {saveError}
           </p>
         )}
+
         <div>
           <input
             ref={titleRef}

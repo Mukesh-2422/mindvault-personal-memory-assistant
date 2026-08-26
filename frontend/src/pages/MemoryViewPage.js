@@ -391,16 +391,8 @@ export default function MemoryViewPage() {
           </button>
         </div>
 
-        <div className="editor-nav-center">
-          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            {getMemoryTypeIcon(memory.type, 16)}
-            <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-              {formatFullDate(memory.date)} · {formatTime(memory.date)}
-            </span>
-          </span>
-        </div>
-
         <div className="editor-nav-right">
+
           {/* More Options Dropdown */}
           <div className="dropdown" ref={moreRef}>
             <button
@@ -413,6 +405,10 @@ export default function MemoryViewPage() {
             </button>
             {moreOpen && (
               <div className="dropdown-menu" style={{ right: 0, top: "100%" }}>
+                <button className="dropdown-item" onClick={() => { handlePin(); setMoreOpen(false); }}>
+                  <Pin size={16} strokeWidth={1.5} />
+                  <span>{memory?.pinned ? "Unpin Memory" : "Pin Memory"}</span>
+                </button>
                 <button className="dropdown-item" onClick={copyTextToClipboard}>
                   <Copy size={16} strokeWidth={1.5} /> Copy Text
                 </button>
@@ -449,30 +445,20 @@ export default function MemoryViewPage() {
             )}
           </div>
 
-          {/* Pin Button */}
-          <button
-            className="editor-nav-btn"
-            onClick={handlePin}
-            aria-label={memory.pinned ? "Unpin memory" : "Pin memory"}
-            title={memory.pinned ? "Unpin memory" : "Pin memory"}
-            style={{ color: memory.pinned ? "#EAB308" : undefined }}
-          >
-            <Pin size={16} strokeWidth={1.5} />
-          </button>
-
           {/* Save Button */}
           <button
-            className="editor-nav-btn save-btn"
+            className="editor-nav-btn"
             onClick={performSave}
             disabled={saving}
             aria-label="Save changes"
-            title="Save memory"
+            title="Save changes"
+            style={{ color: "var(--accent)" }}
           >
-            <Save size={15} strokeWidth={1.75} />
-            <span>{saving ? "Saving..." : "Save"}</span>
+            <Check size={20} strokeWidth={2.2} />
           </button>
         </div>
       </nav>
+
 
       {/* Editor Content Area */}
       <div className="memory-editor-content memory-view-page">

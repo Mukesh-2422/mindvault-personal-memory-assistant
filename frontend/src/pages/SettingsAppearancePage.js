@@ -7,9 +7,9 @@ import "../styles/global.css";
 import "../styles/pages.css";
 
 const THEMES = [
-  { label: "Light", value: "light", desc: "Clean bright theme", icon: Sun, iconColor: "#F59E0B", iconBg: "rgba(245, 158, 11, 0.08)" },
-  { label: "Dark", value: "dark", desc: "Easy on the eyes in dark rooms", icon: Moon, iconColor: "#8B5CF6", iconBg: "rgba(139, 92, 246, 0.08)" },
-  { label: "System", value: "system", desc: "Matches your device theme automatically", icon: Monitor, iconColor: "#3B82F6", iconBg: "rgba(59, 130, 246, 0.08)" },
+  { label: "Light", value: "light", desc: "Clean, bright display", icon: Sun },
+  { label: "Dark", value: "dark", desc: "Easy on the eyes in low light", icon: Moon },
+  { label: "System", value: "system", desc: "Matches your device theme", icon: Monitor },
 ];
 
 export default function SettingsAppearancePage() {
@@ -48,7 +48,6 @@ export default function SettingsAppearancePage() {
           <p className="settings-subtitle">Manage theme and display preferences.</p>
         </div>
 
-
         <div className="modern-settings-section">
           <div className="modern-section-label">THEME MODE</div>
           <div className="modern-settings-card">
@@ -62,10 +61,7 @@ export default function SettingsAppearancePage() {
                   className={`seamless-option-row ${isSelected ? "selected" : ""}`}
                 >
                   <div className="seamless-row-left">
-                    <div
-                      className="seamless-row-icon"
-                      style={{ background: t.iconBg, color: t.iconColor }}
-                    >
+                    <div className="seamless-row-icon">
                       <Icon size={16} strokeWidth={2} />
                     </div>
                     <div>

@@ -105,6 +105,9 @@ async function extractMemoryEntities({ title = "", content = "", transcript = ""
       detectedPeople: [],
       category: "Personal",
       sentiment: "Neutral",
+      summary: "",
+      actionItems: [],
+      reminders: [],
     };
   }
 
@@ -112,23 +115,30 @@ async function extractMemoryEntities({ title = "", content = "", transcript = ""
     return fallbackExtraction({ title, content, transcript });
   }
 
-  const systemPrompt = `You are an AI metadata and entity extraction assistant for MindVault, a personal memory notebook.
-Analyze the provided personal memory text and extract entities and metadata in strictly valid JSON.
+  const systemPrompt = `You are an AI intelligence assistant for MindVault, a personal memory notebook.
+Analyze the memory note/transcript and extract structured insights in strictly valid JSON.
 
 JSON Schema Requirement:
 {
   "suggestedTags": ["tag1", "tag2"],
   "detectedPeople": ["Name1", "Name2"],
-  "category": "Work" | "Personal" | "Ideas" | "Travel",
-  "sentiment": "Positive" | "Neutral" | "Negative"
+  "category": "Work" | "Personal" | "Ideas" | "Travel" | "Finance" | "Health",
+  "sentiment": "Positive" | "Neutral" | "Negative",
+  "summary": "1 concise sentence summary of the key takeaway",
+  "actionItems": ["To-do task 1", "To-do task 2"],
+  "reminders": [
+    { "title": "Reminder title", "date": "YYYY-MM-DD" }
+  ]
 }
 
 Guidelines:
-1. suggestedTags: 2 to 5 relevant, clean, lowercase keyword tags without "#" (e.g. ["interview", "career", "system-design"]).
-2. detectedPeople: Proper names of any people, colleagues, friends, or family explicitly mentioned in the text (e.g. ["Priya", "John"]). Do not include brands, companies, or generic roles.
-3. category: Exactly one of "Work", "Personal", "Ideas", or "Travel".
-4. sentiment: Exactly one of "Positive", "Neutral", or "Negative".
-Output strictly valid JSON matching this schema and nothing else.`;
+1. suggestedTags: 2 to 4 clean lowercase keyword tags without '#'.
+2. detectedPeople: Names of people explicitly mentioned.
+3. category: Pick the best fitting category.
+4. summary: 1 clean, friendly sentence summarizing the note.
+5. actionItems: Extract any actionable to-dos, tasks, or follow-ups mentioned (empty array if none).
+6. reminders: If the user mentions any specific dates, deadlines, birthdays, or renewals, extract them with estimated YYYY-MM-DD (empty array if none).
+Output strictly valid JSON matching this schema.`;
 
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -145,7 +155,7 @@ Output strictly valid JSON matching this schema and nothing else.`;
         ],
         response_format: { type: "json_object" },
         temperature: 0.1,
-        max_tokens: 350,
+        max_tokens: 450,
       }),
     });
 
@@ -164,7 +174,7 @@ Output strictly valid JSON matching this schema and nothing else.`;
     const parsed = JSON.parse(rawContent);
 
     // Validate and sanitize response
-    const validCategories = ["Work", "Personal", "Ideas", "Travel"];
+    const validCategories = ["Work", "Personal", "Ideas", "Travel", "Finance", "Health"];
     const validSentiments = ["Positive", "Neutral", "Negative"];
 
     const suggestedTags = Array.isArray(parsed.suggestedTags)
@@ -185,17 +195,25 @@ Output strictly valid JSON matching this schema and nothing else.`;
     );
     const sentiment = matchedSent || "Neutral";
 
+    const summary = typeof parsed.summary === "string" ? parsed.summary.trim() : "";
+    const actionItems = Array.isArray(parsed.actionItems) ? parsed.actionItems.map((a) => String(a).trim()).filter(Boolean) : [];
+    const reminders = Array.isArray(parsed.reminders) ? parsed.reminders.filter((r) => r && r.title) : [];
+
     return {
       suggestedTags,
       detectedPeople,
       category,
       sentiment,
+      summary,
+      actionItems,
+      reminders,
     };
   } catch (err) {
     console.warn("[EntityExtractor] Groq extraction error, falling back to heuristics:", err.message);
     return fallbackExtraction({ title, content, transcript });
   }
 }
+
 
 /**
  * Process auto-tagging, entity extraction, and people linking for a memory in the database.

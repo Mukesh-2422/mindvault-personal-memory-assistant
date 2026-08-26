@@ -60,6 +60,11 @@ export async function moveMemoryToVault(id) {
   return api.post(`/memories/${id}/move-to-vault`);
 }
 
+export async function analyzeMemory(data) {
+  return api.post("/memories/analyze", data);
+}
+
+
 /**
  * Securely retrieve a single memory for use as chat context.
  * The backend verifies ownership (memoryId + authenticated userId).

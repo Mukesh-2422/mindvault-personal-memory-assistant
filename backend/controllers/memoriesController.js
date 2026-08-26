@@ -39,6 +39,9 @@ async function createMemory(req, res) {
       mediaType,
       mediaSize,
       duration,
+      summary,
+      actionItems,
+      reminders,
     } = req.body;
 
     if (!title && !content && !encryptedData) {
@@ -67,12 +70,16 @@ async function createMemory(req, res) {
       mediaType: mediaType || null,
       mediaSize: mediaSize || null,
       duration: duration || null,
+      summary: summary || null,
+      actionItems: Array.isArray(actionItems) ? actionItems : null,
+      reminders: Array.isArray(reminders) ? reminders : null,
       relatedPerson: req.body.relatedPerson || null,
       date: new Date().toISOString(),
       deleted: false,
       deletedAt: null,
       vaultId: vaultId || null,
     };
+
 
     await insertOne("memories", memory);
 

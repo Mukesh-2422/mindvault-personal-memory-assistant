@@ -8,8 +8,9 @@ import { getOnThisDay } from "../data/dummyData";
 import {
   Brain, Mic, Send, Search, Play, Pause, FileText, Image as ImageIcon,
   Video as VideoIcon, CheckSquare, Sparkles, ArrowDown, Plus, ArrowUpRight, X,
-  Paperclip, ChevronDown, Link2
+  Paperclip, ChevronDown, Link2, Bell
 } from "lucide-react";
+
 import { getMediaUrl, transcribeAudio } from "../api/voice";
 import "../styles/global.css";
 import "../styles/dashboard.css";
@@ -435,6 +436,29 @@ export default function HomePage() {
   }, []);
 
   const [selectedMemory, setSelectedMemory] = useState(null);
+
+  const upcomingReminders = React.useMemo(() => {
+    if (!state.memories) return [];
+    const list = [];
+    state.memories
+      .filter((m) => !m.deleted && !m.vaultId)
+      .forEach((m) => {
+        if (Array.isArray(m.reminders)) {
+          m.reminders.forEach((r) => {
+            if (r && r.title) {
+              list.push({
+                memoryId: m.id || m._id,
+                memoryTitle: m.title,
+                title: r.title,
+                date: r.date,
+              });
+            }
+          });
+        }
+      });
+    return list.slice(0, 4);
+  }, [state.memories]);
+
 
   const streamRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -980,7 +1004,6 @@ export default function HomePage() {
         {!isInitialLoading && hasMemories && onThisDay && (state.aiPreferences?.onThisDayEnabled !== false) && (
           <div className="memory-recall-card" onClick={() => navigate(`/memory/${onThisDay.id || onThisDay._id}`, { state: { from: "/home" } })}>
             <div className="recall-header">
-
               <Sparkles size={16} strokeWidth={2} />
               <span className="recall-label">On This Day</span>
             </div>
@@ -991,6 +1014,8 @@ export default function HomePage() {
             <div className="recall-action">View Memory →</div>
           </div>
         )}
+
+
 
 
 
@@ -1127,54 +1152,9 @@ export default function HomePage() {
             <h1 className="hero-title">MindVault</h1>
             <p className="hero-subtitle">Your Second Brain</p>
             <p className="hero-prompt">What would you like to remember today?</p>
-
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                justifyContent: "center",
-                gap: "8px",
-                marginTop: "16px",
-                maxWidth: "480px",
-              }}
-            >
-              {[
-                { label: "✨ Summarize my memories", query: "Summarize my saved memories" },
-                { label: "📝 Recent notes", query: "What are my recent notes?" },
-                { label: "🗓️ This month", query: "What did I save this month?" },
-                { label: "💡 Key reminders", query: "What are my important reminders?" },
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={() => handleSend(item.query)}
-                  style={{
-                    background: "var(--card-bg, #ffffff)",
-                    border: "1px solid var(--border-color)",
-                    color: "var(--text-primary)",
-                    padding: "8px 14px",
-                    borderRadius: "20px",
-                    fontSize: "13px",
-                    fontWeight: "500",
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                    boxShadow: "var(--shadow-sm)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "var(--accent)";
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "var(--border-color)";
-                    e.currentTarget.style.transform = "none";
-                  }}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
           </div>
         )}
+
 
 
         {/* Chat Messages */}
