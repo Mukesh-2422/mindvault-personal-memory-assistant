@@ -3,12 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { togglePinMemory, deleteMemory, updateMemory, getMemory, moveMemoryToVault } from "../api/memories";
 import { useAppBackNavigation } from "../utils/useAppBackNavigation";
+import { decryptMemory, encryptMemory } from "../lib/crypto";
 import {
   formatFullDate, formatTime, formatMemoryDateTime, getMemoryTypeIcon, truncate,
 } from "../utils/helpers";
 import {
   ArrowLeft, Pin, MoreHorizontal, Download, Lock, Trash2, Play, Pause, Folder, User, Search,
-  FileText, Copy, Image as ImageIcon, Mic, Video as VideoIcon, CheckSquare, Save, X, Plus, Check
+  FileText, Copy, Image as ImageIcon, Mic, Video as VideoIcon, CheckSquare, Save, X, Plus, Check, Key, Shield, Unlock
 } from "lucide-react";
 import jsPDF from "jspdf";
 import { getMediaUrl } from "../api/voice";
@@ -39,6 +40,12 @@ export default function MemoryViewPage() {
   const [saving, setSaving] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState("");
 
+  // Vault decryption / PIN state
+  const [showPinUnlockPrompt, setShowPinUnlockPrompt] = useState(false);
+  const [viewPinInput, setViewPinInput] = useState("");
+  const [unlockError, setUnlockError] = useState("");
+  const [isDecrypted, setIsDecrypted] = useState(false);
+
   const audioRef = useRef(null);
   const moreRef = useRef(null);
   const titleInputRef = useRef(null);
@@ -64,18 +71,60 @@ export default function MemoryViewPage() {
     }
   }, [id, memory, loadingMemory]);
 
-  // Sync state when memory is loaded or changed
+  // Sync state and handle client-side decryption when memory is loaded or changed
   useEffect(() => {
     if (memory) {
-      setEditTitle(memory.title || "");
-      setEditContent(memory.content || "");
-      setEditTags(memory.tags || []);
-      setEditChecklist(memory.checklist || []);
+      if (memory.isEncrypted && memory.encryptedData) {
+        if (state.vaultPin) {
+          decryptMemory(memory, state.vaultPin).then((dec) => {
+            setEditTitle(dec.title || "");
+            setEditContent(dec.content || "");
+            setEditTags(dec.tags || []);
+            setEditChecklist(dec.checklist || []);
+            setIsDecrypted(true);
+          });
+        } else {
+          setEditTitle(memory.title || "[Encrypted Vault Memory]");
+          setEditContent(memory.content || "[Protected with AES-GCM Encryption]");
+          setIsDecrypted(false);
+        }
+      } else {
+        setEditTitle(memory.title || "");
+        setEditContent(memory.content || "");
+        setEditTags(memory.tags || []);
+        setEditChecklist(memory.checklist || []);
+        setIsDecrypted(true);
+      }
       if (memory.duration) {
         setAudioDuration(memory.duration);
       }
     }
-  }, [memory]);
+  }, [memory, state.vaultPin]);
+
+  const handleManualDecrypt = async () => {
+    if (!viewPinInput || viewPinInput.length < 4) {
+      setUnlockError("PIN must be at least 4 characters.");
+      return;
+    }
+    setUnlockError("");
+    try {
+      const dec = await decryptMemory(memory, viewPinInput);
+      if (dec.decryptionFailed) {
+        setUnlockError("Incorrect Vault PIN / Password.");
+        return;
+      }
+      dispatch({ type: "SET_VAULT_PIN", payload: viewPinInput });
+      setEditTitle(dec.title || "");
+      setEditContent(dec.content || "");
+      setEditTags(dec.tags || []);
+      setEditChecklist(dec.checklist || []);
+      setIsDecrypted(true);
+      setShowPinUnlockPrompt(false);
+      setViewPinInput("");
+    } catch (err) {
+      setUnlockError("Failed to decrypt: " + err.message);
+    }
+  };
 
   // Click outside to close 3-dots more menu
   useEffect(() => {
@@ -168,13 +217,18 @@ export default function MemoryViewPage() {
     setSaving(true);
     setAutoSaveStatus("Saving...");
     try {
-      const updatedPayload = {
+      let updatedPayload = {
         title: editTitle.trim() || memory.title || "Untitled Memory",
         content: editContent,
         tags: editTags,
         checklist: memory.type === "checklist" ? editChecklist : undefined,
         date: memory.date || new Date().toISOString(),
       };
+
+      if ((memory.vaultId === "vault" || memory.isEncrypted) && state.vaultPin) {
+        updatedPayload = await encryptMemory(updatedPayload, state.vaultPin);
+      }
+
       await updateMemory(memoryId, updatedPayload);
       const updated = await getMemory(memoryId);
       dispatch({ type: "UPDATE_MEMORY", payload: updated || { ...memory, ...updatedPayload, id: memoryId } });
@@ -625,17 +679,28 @@ export default function MemoryViewPage() {
 
         {/* Universal Content / Notes Area for ALL memory types */}
         <div className="memory-notes-section" style={{ marginBottom: 24 }}>
-          <textarea
-            ref={contentInputRef}
-            className="memory-body-input"
-            value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
-            placeholder="Add notes, context, or thoughts about this memory..."
-            rows={4}
-          />
+          {memory.isEncrypted && !isDecrypted ? (
+            <div style={{ padding: "24px 16px", background: "var(--accent-subtle)", border: "1px dashed var(--accent)", borderRadius: "var(--radius)", textAlign: "center", marginBottom: 16 }}>
+              <Lock size={32} style={{ color: "var(--accent)", marginBottom: 8 }} />
+              <h4 style={{ margin: "0 0 6px 0", fontSize: 16 }}>This memory is encrypted</h4>
+              <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "var(--text-secondary)" }}>
+                Protected with client-side AES-GCM (256-bit) encryption.
+              </p>
+              <button className="btn btn-primary btn-sm" onClick={() => setShowPinUnlockPrompt(true)} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Key size={14} /> Enter PIN to Decrypt
+              </button>
+            </div>
+          ) : (
+            <textarea
+              ref={contentInputRef}
+              className="memory-body-input"
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              placeholder="Add notes, context, or thoughts about this memory..."
+              rows={4}
+            />
+          )}
         </div>
-
-
 
         {/* Related Person Mention */}
         {memory.relatedPerson && (
@@ -654,6 +719,43 @@ export default function MemoryViewPage() {
           </div>
         )}
       </div>
+
+      {/* Decrypt PIN Modal */}
+      {showPinUnlockPrompt && (
+        <div className="vault-modal-overlay" onClick={() => setShowPinUnlockPrompt(false)}>
+          <div className="vault-lock-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 360, margin: "20vh auto 0", position: "relative" }}>
+            <button
+              onClick={() => setShowPinUnlockPrompt(false)}
+              style={{ position: "absolute", top: 12, right: 12, background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", padding: 4 }}
+            >
+              <X size={18} strokeWidth={1.5} />
+            </button>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <Shield size={36} strokeWidth={1.5} style={{ color: "var(--accent)", marginBottom: 8 }} />
+              <p className="vault-lock-title" style={{ fontSize: 18 }}>Unlock Memory</p>
+              <p style={{ fontSize: 13, color: "var(--text-tertiary)", marginTop: 4 }}>
+                Enter your Vault PIN / Password to decrypt and view this memory.
+              </p>
+            </div>
+            <div className="input-group" style={{ marginBottom: 16 }}>
+              <label className="input-label">Vault PIN / Password</label>
+              <input
+                type="password"
+                className="input-field"
+                placeholder="Enter vault password"
+                value={viewPinInput}
+                autoFocus
+                onChange={(e) => setViewPinInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleManualDecrypt()}
+              />
+            </div>
+            {unlockError && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{unlockError}</p>}
+            <button className="btn btn-primary btn-full" onClick={handleManualDecrypt}>
+              <Unlock size={16} strokeWidth={2} /> Decrypt & View
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

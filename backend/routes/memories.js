@@ -10,12 +10,14 @@ const {
   moveMemoryToVault,
   togglePinMemory,
   selectMemory,
+  analyzeMemoryPreview,
 } = require("../controllers/memoriesController");
 
 const router = express.Router();
 
 router.get("/", getMemories);
 router.post("/", createMemory);
+router.post("/analyze", analyzeMemoryPreview);
 router.post("/select", selectMemory);
 router.get("/:id", getMemoryById);
 router.put("/:id", updateMemory);

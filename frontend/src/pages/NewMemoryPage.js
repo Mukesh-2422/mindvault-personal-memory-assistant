@@ -6,6 +6,7 @@ import { useAppBackNavigation } from "../utils/useAppBackNavigation";
 import { createMemory, updateMemory } from "../api/memories";
 import { uploadFile } from "../api/client";
 import { uploadVoiceMemory } from "../api/voice";
+import { encryptMemory } from "../lib/crypto";
 import {
   Check,
   Plus,
@@ -24,6 +25,8 @@ import {
   Pin,
   Save,
   FileText,
+  Key,
+  Shield,
 } from "lucide-react";
 import "../styles/global.css";
 import "../styles/pages.css";
@@ -61,6 +64,12 @@ export default function NewMemoryPage() {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [saveToVault, setSaveToVault] = useState(existingMemory?.vaultId === "vault");
   const [saveError, setSaveError] = useState("");
+
+  // PIN modal for private vault encryption
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [vaultPinInput, setVaultPinInput] = useState("");
+  const [pinModalError, setPinModalError] = useState("");
+  const pendingSaveRef = useRef(null);
 
   useEffect(() => {
     if (editId && !existingMemory) {
@@ -267,7 +276,7 @@ export default function NewMemoryPage() {
         finalMediaUrl = uploadedMedia.url;
       }
 
-      const memoryData = {
+      let memoryData = {
         title: title || content?.substring(0, 50) || "Untitled",
         content,
         type,
@@ -282,18 +291,55 @@ export default function NewMemoryPage() {
         duration: finalDuration,
       };
 
-      if (editId && existingMemory) {
-        const saved = await updateMemory(editId, memoryData);
-        dispatch({ type: "UPDATE_MEMORY", payload: { id: editId, ...saved } });
-        navigate(`/memory/${editId}`);
-      } else {
-        const saved = await createMemory(memoryData);
-        dispatch({ type: "ADD_MEMORY", payload: saved });
-        navigate("/home");
+      if (saveToVault) {
+        if (state.vaultPin) {
+          memoryData = await encryptMemory(memoryData, state.vaultPin);
+        } else {
+          // Vault PIN not set in current session, ask user for PIN to encrypt
+          pendingSaveRef.current = memoryData;
+          setShowPinModal(true);
+          setSaving(false);
+          return;
+        }
       }
+
+      await executeSavePayload(memoryData);
     } catch (err) {
       console.error("Failed to save memory:", err);
       setSaveError(err.message || "Failed to save. File may be too large.");
+      setSaving(false);
+    }
+  };
+
+  const executeSavePayload = async (dataToSave) => {
+    if (editId && existingMemory) {
+      const saved = await updateMemory(editId, dataToSave);
+      dispatch({ type: "UPDATE_MEMORY", payload: { id: editId, ...saved } });
+      navigate(dataToSave.vaultId === "vault" ? "/vault" : `/memory/${editId}`);
+    } else {
+      const saved = await createMemory(dataToSave);
+      dispatch({ type: "ADD_MEMORY", payload: saved });
+      navigate(dataToSave.vaultId === "vault" ? "/vault" : "/home");
+    }
+  };
+
+  const handleConfirmPinModal = async () => {
+    if (!vaultPinInput || vaultPinInput.length < 4) {
+      setPinModalError("Vault PIN/Password must be at least 4 characters.");
+      return;
+    }
+    setPinModalError("");
+    setSaving(true);
+    try {
+      dispatch({ type: "SET_VAULT_PIN", payload: vaultPinInput });
+      if (pendingSaveRef.current) {
+        const encryptedData = await encryptMemory(pendingSaveRef.current, vaultPinInput);
+        setShowPinModal(false);
+        await executeSavePayload(encryptedData);
+      }
+    } catch (err) {
+      console.error("Encryption error:", err);
+      setPinModalError("Failed to encrypt memory: " + err.message);
       setSaving(false);
     }
   };
@@ -574,6 +620,43 @@ export default function NewMemoryPage() {
           <span>Checklist</span>
         </button>
       </div>
+
+      {/* Vault PIN Modal */}
+      {showPinModal && (
+        <div className="vault-modal-overlay" onClick={() => setShowPinModal(false)}>
+          <div className="vault-lock-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 380, margin: "20vh auto 0", position: "relative" }}>
+            <button
+              onClick={() => setShowPinModal(false)}
+              style={{ position: "absolute", top: 12, right: 12, background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", padding: 4 }}
+            >
+              <X size={18} strokeWidth={1.5} />
+            </button>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <Shield size={36} strokeWidth={1.5} style={{ color: "var(--accent)", marginBottom: 8 }} />
+              <p className="vault-lock-title" style={{ fontSize: 18 }}>Encrypt Vault Memory</p>
+              <p style={{ fontSize: 13, color: "var(--text-tertiary)", marginTop: 4 }}>
+                Enter your Vault PIN/Password to encrypt this memory with client-side AES-GCM (256-bit).
+              </p>
+            </div>
+            <div className="input-group" style={{ marginBottom: 16 }}>
+              <label className="input-label">Vault PIN / Password</label>
+              <input
+                type="password"
+                className="input-field"
+                placeholder="Enter vault password"
+                value={vaultPinInput}
+                autoFocus
+                onChange={(e) => setVaultPinInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleConfirmPinModal()}
+              />
+            </div>
+            {pinModalError && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{pinModalError}</p>}
+            <button className="btn btn-primary btn-full" onClick={handleConfirmPinModal} disabled={saving}>
+              <Lock size={16} strokeWidth={2} /> {saving ? "Encrypting..." : "Encrypt & Save"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

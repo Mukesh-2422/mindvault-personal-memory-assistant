@@ -29,6 +29,7 @@ const initialState = {
   user: null,
   vaultLocked: true,
   vaultPasswordSet: false,
+  vaultPin: null,
   isAuthenticated: !!getToken(),
   searchQuery: "",
   loading: !!getToken(),
@@ -73,6 +74,7 @@ function appReducer(state, action) {
         isAuthenticated: false,
         loading: false,
         dataLoaded: false,
+        vaultPin: null,
       };
     case "SET_DATA":
       return {
@@ -159,15 +161,18 @@ function appReducer(state, action) {
         ...state,
         people: state.people.filter((p) => !(p.id === action.payload || p._id === action.payload || String(p.id) === String(action.payload) || String(p._id) === String(action.payload))),
       };
+    case "SET_VAULT_PIN":
+      return { ...state, vaultPin: action.payload };
     case "UNLOCK_VAULT":
-      return { ...state, vaultLocked: false };
+      return { ...state, vaultLocked: false, vaultPin: action.payload?.pin || state.vaultPin || null };
     case "LOCK_VAULT":
-      return { ...state, vaultLocked: true };
+      return { ...state, vaultLocked: true, vaultPin: null };
     case "SET_VAULT_STATUS":
       return {
         ...state,
         vaultLocked: action.payload.locked,
         vaultPasswordSet: action.payload.passwordSet,
+        vaultPin: action.payload.locked ? null : (action.payload.pin || state.vaultPin || null),
       };
     case "UPDATE_USER":
       return { ...state, user: { ...state.user, ...action.payload } };

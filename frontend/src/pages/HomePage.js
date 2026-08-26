@@ -434,11 +434,7 @@ export default function HomePage() {
     }, duration);
   }, []);
 
-  const [memorySearchResults, setMemorySearchResults] = useState([]);
-  const [isSearchingMemories, setIsSearchingMemories] = useState(false);
-  const [playingAudioId, setPlayingAudioId] = useState(null);
   const [selectedMemory, setSelectedMemory] = useState(null);
-  const audioRefs = useRef({});
 
   const streamRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -481,72 +477,6 @@ export default function HomePage() {
 
   const onThisDay = getOnThisDay(state.memories || []);
 
-  const searchMemories = useCallback((query) => {
-    if (!query.trim()) {
-      setMemorySearchResults([]);
-      dispatch({ type: "SET_MEMORY_SEARCH_RESULTS", payload: [] });
-      return;
-    }
-
-    setIsSearchingMemories(true);
-    const q = query.toLowerCase();
-
-    const results = (state.memories || [])
-      .filter((m) => m && !m.deleted)
-      .filter(
-        (m) =>
-          (m.title && m.title.toLowerCase().includes(q)) ||
-          (m.content && m.content.toLowerCase().includes(q)) ||
-          (m.tags && Array.isArray(m.tags) && m.tags.some((t) => typeof t === "string" && t.toLowerCase().includes(q))) ||
-          (m.category && typeof m.category === "string" && m.category.toLowerCase().includes(q)) ||
-          (m.relatedPerson && typeof m.relatedPerson === "string" && m.relatedPerson.toLowerCase().includes(q))
-      );
-
-    setMemorySearchResults(results);
-    dispatch({ type: "SET_MEMORY_SEARCH_RESULTS", payload: results });
-    setIsSearchingMemories(false);
-  }, [state.memories, dispatch]);
-
-  // Real-time debounced memory search when typing
-  useEffect(() => {
-    if (isVoiceRecording || !input.trim()) {
-      setMemorySearchResults([]);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      if (input.trim().length >= 2 && !isVoiceRecording) {
-        searchMemories(input);
-      } else {
-        setMemorySearchResults([]);
-      }
-    }, 250);
-
-    return () => clearTimeout(timer);
-  }, [input, isVoiceRecording, searchMemories]);
-
-  const toggleAudioPlay = (memoryId, audioUrl) => {
-    if (playingAudioId === memoryId) {
-      if (audioRefs.current[memoryId]) {
-        audioRefs.current[memoryId].pause();
-      }
-      setPlayingAudioId(null);
-    } else {
-      if (playingAudioId && audioRefs.current[playingAudioId]) {
-        audioRefs.current[playingAudioId].pause();
-      }
-      if (audioRefs.current[memoryId]) {
-        audioRefs.current[memoryId].play();
-        setPlayingAudioId(memoryId);
-      }
-    }
-  };
-
-  const handleAudioEnded = (memoryId) => {
-    if (playingAudioId === memoryId) {
-      setPlayingAudioId(null);
-    }
-  };
 
   const triggerFileSelect = (acceptType) => {
     setFileAccept(acceptType);
@@ -596,7 +526,6 @@ export default function HomePage() {
     setInput("");
     setAttachedFile(null);
     setChatError(null);
-    setMemorySearchResults([]);
 
     const userMsg = {
       id: `user_${Date.now()}`,
@@ -975,15 +904,27 @@ export default function HomePage() {
     }
   };
 
-  const handleSelectMemory = async (memoryId) => {
+  const handleSelectMemory = async (memoryId, memoryObj = null) => {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
-    setMemorySearchResults([]);
-    setIsTyping(true);
 
-    // Find the latest user query to ground the selection response
-    const lastUserMsg = (state.chatMessages || []).slice().reverse().find((m) => m.role === "user");
-    const userQuery = lastUserMsg?.content || "";
+    // Use the current typed input or default to memory title
+    const typedQuery = input.trim();
+    const userQuery = typedQuery || (memoryObj?.title ? `Tell me about ${memoryObj.title}` : "Tell me about this memory");
+
+    // Clear input
+    setInput("");
+    setChatError(null);
+
+    // Add user question to the chat stream
+    const userMsg = {
+      id: `user_${Date.now()}`,
+      role: "user",
+      content: userQuery,
+      timestamp: new Date().toISOString(),
+    };
+    dispatch({ type: "ADD_CHAT_MESSAGE", payload: userMsg });
+    setIsTyping(true);
 
     try {
       const result = await selectMemoryContext(memoryId, userQuery);
@@ -992,10 +933,12 @@ export default function HomePage() {
           id: result.assistant.id || `assistant_${Date.now()}`,
           role: "assistant",
           content: result.assistant.content,
+          answer: result.assistant.content,
           memorySource: result.assistant.memorySource || result.assistant.selectedMemory || result.assistant.relatedMemories,
-          selectedMemory: result.assistant.selectedMemory,
-          relatedMemories: result.assistant.relatedMemories,
-          requiresSelection: result.assistant.requiresSelection,
+          selectedMemory: result.assistant.selectedMemory || (memoryObj ? { id: memoryId, title: memoryObj.title } : null),
+          referencedMemories: result.assistant.relatedMemories || (memoryObj ? [{ id: memoryId, title: memoryObj.title, preview: (memoryObj.content || "").substring(0, 100) }] : []),
+          relatedMemories: result.assistant.relatedMemories || (memoryObj ? [{ id: memoryId, title: memoryObj.title, preview: (memoryObj.content || "").substring(0, 100) }] : []),
+          requiresSelection: false,
           timestamp: result.assistant.timestamp || new Date().toISOString(),
         };
         dispatch({ type: "ADD_CHAT_MESSAGE", payload: assistantMsg });
@@ -1047,90 +990,8 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Memory Search Results */}
-        {memorySearchResults.length > 0 && (
-          <div className="memory-search-results">
-            <div className="search-results-header">
-              <Search size={18} strokeWidth={1.5} />
-              <span>Found {memorySearchResults.length} memory{memorySearchResults.length !== 1 ? "ies" : "y"}</span>
-            </div>
-            <div className="memory-search-list">
-              {memorySearchResults.map((m, idx) => {
-                const memoryId = m?.id || m?._id || `res_${idx}`;
-                return (
-                  <div
-                    key={memoryId}
-                    className="memory-search-item"
-                  >
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                      <div className="memory-search-media">
-                        {m.type === "voice" && (m.mediaUrl || m.mediaData) && (
-                          <button
-                            className={`memory-search-play-btn ${playingAudioId === memoryId ? "playing" : ""}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleAudioPlay(memoryId, m.mediaUrl || m.mediaData);
-                            }}
-                            title={playingAudioId === memoryId ? "Pause" : "Play voice memory"}
-                          >
-                            {playingAudioId === memoryId ? (
-                              <span className="pause-icon">❚❚</span>
-                            ) : (
-                              <Play size={14} fill="currentColor" />
-                            )}
-                          </button>
-                        )}
-                        {m.type === "image" && (m.mediaUrl || m.mediaData) && (
-                          <img
-                            src={getMediaUrl(m.mediaUrl || m.mediaData)}
-                            alt={m.title || "Memory preview"}
-                            className="memory-search-thumb"
-                          />
-                        )}
-                        {m.type === "video" && (m.mediaUrl || m.mediaData) && (
-                          <div className="memory-search-video-badge">
-                            <VideoIcon size={16} />
-                          </div>
-                        )}
-                        {m.type === "checklist" && (
-                          <div className="memory-search-checklist-badge">
-                            <CheckSquare size={16} />
-                          </div>
-                        )}
-                        {(!m.type || m.type === "text") && (
-                          <div className="memory-search-text-badge">
-                            <FileText size={16} />
-                          </div>
-                        )}
-                      </div>
-                      <div
-                        className="memory-search-item-info"
-                        onClick={() => navigate(`/memory/${memoryId}`, { state: { from: "/home" } })}
-                        style={{ cursor: "pointer", flex: 1 }}
-                      >
-                        <div className="memory-search-item-title">{m.title || "Untitled Memory"}</div>
-                        <div className="memory-search-item-preview">
-                          {m.content ? m.content.substring(0, 100) + (m.content.length > 100 ? "..." : "") : "No content"}
-                        </div>
-                      </div>
-                    </div>
 
-                    {m.type === "voice" && (m.mediaUrl || m.mediaData) && (
-                      <audio
-                        ref={(el) => {
-                          if (el) audioRefs.current[memoryId] = el;
-                        }}
-                        src={getMediaUrl(m.mediaUrl || m.mediaData)}
-                        onEnded={() => handleAudioEnded(memoryId)}
-                        style={{ display: "none" }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+
 
         {/* Empty State Onboarding View */}
         {isEmptyState && (

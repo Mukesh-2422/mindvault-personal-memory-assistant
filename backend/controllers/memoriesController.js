@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const { getCollection, insertOne, updateOne, deleteOne, findById } = require("../db");
+const { processMemoryAutoTagging, extractMemoryEntities } = require("../utils/entityExtractor");
 
 async function getUserMemories(userId) {
   return getCollection("memories", { userId });
@@ -24,6 +25,14 @@ async function createMemory(req, res) {
       tags,
       pinned,
       checklist,
+      category,
+      people,
+      sentiment,
+      isEncrypted,
+      encryptedData,
+      iv,
+      salt,
+      vaultId,
       mediaData,
       mediaUrl,
       mediaName,
@@ -32,7 +41,7 @@ async function createMemory(req, res) {
       duration,
     } = req.body;
 
-    if (!title && !content) {
+    if (!title && !content && !encryptedData) {
       return res.status(400).json({ error: "Title or content required" });
     }
 
@@ -42,8 +51,15 @@ async function createMemory(req, res) {
       title: title || content?.substring(0, 50) || "Untitled",
       content: content || "",
       type: type || "text",
-      tags: tags || [],
+      category: category || "Personal",
+      tags: Array.isArray(tags) ? tags : [],
+      people: Array.isArray(people) ? people : [],
+      sentiment: sentiment || null,
       pinned: pinned || false,
+      isEncrypted: !!isEncrypted,
+      encryptedData: encryptedData || null,
+      iv: iv || null,
+      salt: salt || null,
       checklist: type === "checklist" ? checklist || [] : undefined,
       mediaData: mediaData || null,
       mediaUrl: mediaUrl || null,
@@ -55,10 +71,18 @@ async function createMemory(req, res) {
       date: new Date().toISOString(),
       deleted: false,
       deletedAt: null,
-      vaultId: null,
+      vaultId: vaultId || null,
     };
 
     await insertOne("memories", memory);
+
+    // Run entity extraction and auto-tagging asynchronously to keep UI response snappy (unless encrypted/private)
+    if (!memory.isEncrypted && memory.vaultId !== "vault") {
+      processMemoryAutoTagging(memory.id, req.user.id, memory).catch((autoErr) => {
+        console.warn("[MemoriesController] Async auto-tagging notice:", autoErr?.message || autoErr);
+      });
+    }
+
     res.status(201).json(memory);
   } catch (err) {
     console.error("Error saving memory:", err);
@@ -129,6 +153,13 @@ async function updateMemory(req, res) {
       "tags",
       "pinned",
       "checklist",
+      "category",
+      "people",
+      "sentiment",
+      "isEncrypted",
+      "encryptedData",
+      "iv",
+      "salt",
       "relatedPerson",
       "vaultId",
       "mediaData",
@@ -145,6 +176,14 @@ async function updateMemory(req, res) {
     }
 
     const updated = await updateOne("memories", req.params.id, updates);
+
+    // If text or tags were updated and not encrypted, re-process entity extraction in the background
+    if (!updated.isEncrypted && updated.vaultId !== "vault" && (req.body.title !== undefined || req.body.content !== undefined || req.body.tags !== undefined)) {
+      processMemoryAutoTagging(req.params.id, req.user.id, updated).catch((autoErr) => {
+        console.warn("[MemoriesController] Async auto-tagging notice on update:", autoErr?.message || autoErr);
+      });
+    }
+
     res.json(updated);
   } catch (err) {
     console.error("Error updating memory:", err);
@@ -225,6 +264,20 @@ async function togglePinMemory(req, res) {
   }
 }
 
+/**
+ * Live preview of entity extraction and suggested tags
+ */
+async function analyzeMemoryPreview(req, res) {
+  try {
+    const { title, content, transcript, checklist } = req.body;
+    const result = await extractMemoryEntities({ title, content, transcript, checklist });
+    res.json(result);
+  } catch (err) {
+    console.error("Error analyzing memory entities:", err);
+    res.status(500).json({ error: "Failed to analyze memory entities" });
+  }
+}
+
 module.exports = {
   getMemories,
   createMemory,
@@ -236,4 +289,5 @@ module.exports = {
   moveMemoryToVault,
   togglePinMemory,
   selectMemory,
+  analyzeMemoryPreview,
 };

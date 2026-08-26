@@ -14,6 +14,7 @@ import {
   resetVault,
   forgotVaultPassword,
 } from "../api/vault";
+import { decryptMemory } from "../lib/crypto";
 import {
   Lock,
   Unlock,
@@ -74,7 +75,7 @@ export default function VaultPage() {
         const status = await getVaultStatus();
         // Only update passwordSet flag, always keep locked=true
         if (status.passwordSet) {
-          dispatch({ type: "SET_VAULT_STATUS", payload: { locked: true, passwordSet: true } });
+          dispatch({ type: "SET_VAULT_STATUS", payload: { locked: true, passwordSet: true, pin: null } });
         }
       } catch (err) {
         console.error("Error checking vault status:", err);
@@ -87,13 +88,26 @@ export default function VaultPage() {
     if (!state.vaultLocked) {
       loadVaultMemories();
     }
-  }, [state.vaultLocked]);
+  }, [state.vaultLocked, state.vaultPin]);
 
-  const loadVaultMemories = async () => {
+  const loadVaultMemories = async (activePin = null) => {
     setLoadingMemories(true);
     try {
-      const memories = await getVaultMemories();
-      setVaultMemories(memories);
+      const pinToUse = activePin || state.vaultPin;
+      const rawMemories = await getVaultMemories();
+      if (pinToUse && Array.isArray(rawMemories)) {
+        const decryptedList = await Promise.all(
+          rawMemories.map(async (m) => {
+            if (m.isEncrypted && m.encryptedData) {
+              return await decryptMemory(m, pinToUse);
+            }
+            return m;
+          })
+        );
+        setVaultMemories(decryptedList);
+      } else {
+        setVaultMemories(rawMemories || []);
+      }
     } catch (err) {
       console.error("Failed to load vault memories:", err);
     } finally {
@@ -113,7 +127,7 @@ export default function VaultPage() {
     }
     try {
       const result = await createVault(passwordInput);
-      dispatch({ type: "SET_VAULT_STATUS", payload: result });
+      dispatch({ type: "SET_VAULT_STATUS", payload: { ...result, pin: passwordInput } });
       setError("");
       setPasswordInput("");
       setConfirmInput("");
@@ -124,11 +138,13 @@ export default function VaultPage() {
 
   const handleUnlock = async () => {
     setError("");
+    const enteredPin = passwordInput;
     try {
-      const result = await unlockVault(passwordInput);
-      dispatch({ type: "SET_VAULT_STATUS", payload: result });
+      const result = await unlockVault(enteredPin);
+      dispatch({ type: "SET_VAULT_STATUS", payload: { ...result, pin: enteredPin } });
       setError("");
       setPasswordInput("");
+      await loadVaultMemories(enteredPin);
     } catch (err) {
       setError(err.message || "Incorrect password.");
     }
@@ -137,7 +153,8 @@ export default function VaultPage() {
   const handleLockVault = async () => {
     try {
       const result = await lockVault();
-      dispatch({ type: "SET_VAULT_STATUS", payload: result });
+      dispatch({ type: "SET_VAULT_STATUS", payload: { ...result, locked: true, pin: null } });
+      setVaultMemories([]);
       setShowSettings(false);
       setPasswordInput("");
     } catch (err) {
