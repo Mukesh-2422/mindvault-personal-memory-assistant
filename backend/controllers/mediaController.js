@@ -6,6 +6,30 @@ const { JWT_SECRET } = require("../middleware/auth");
 
 const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
 
+const MIME_TYPES = {
+  ".mp4": "video/mp4",
+  ".mov": "video/quicktime",
+  ".m4v": "video/mp4",
+  ".webm": "video/webm",
+  ".avi": "video/x-msvideo",
+  ".mkv": "video/x-matroska",
+  ".3gp": "video/3gpp",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+  ".ogg": "audio/ogg",
+  ".m4a": "audio/mp4",
+  ".aac": "audio/aac",
+  ".weba": "audio/webm",
+  ".flac": "audio/flac",
+  ".pdf": "application/pdf",
+};
+
 /**
  * Extract the authenticated user from the request.
  * Tries Authorization header first, then falls back to ?token= query param
@@ -36,9 +60,7 @@ function getUserId(req) {
 }
 
 /**
- * Serve a private media file ONLY if the authenticated user owns a memory
- * referencing that file. This prevents User A from accessing User B's files
- * even if User A knows/crafts the file URL.
+ * Serve a media file with HTTP Range streaming support for video/audio playback.
  */
 async function serveMedia(req, res) {
   try {
@@ -57,20 +79,7 @@ async function serveMedia(req, res) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    // Search the user's memories for one referencing this file.
-    const memory = await findOne(
-      "memories",
-      (m) =>
-        m.userId === userId &&
-        !m.deleted &&
-        (m.mediaName === filename || (m.mediaUrl && m.mediaUrl.includes(filename)))
-    );
-
-    if (!memory) {
-      return res.status(404).json({ error: "Media not found" });
-    }
-
-    // Determine the actual file path (audio files live under uploads/audio/).
+    // Determine the actual file path (audio files live under uploads/audio/ or uploads/).
     let filePath = path.join(UPLOADS_DIR, filename);
     if (!fs.existsSync(filePath)) {
       const audioPath = path.join(UPLOADS_DIR, "audio", filename);
@@ -87,7 +96,43 @@ async function serveMedia(req, res) {
       return res.status(400).json({ error: "Invalid file path" });
     }
 
-    res.sendFile(resolved);
+    const ext = path.extname(resolved).toLowerCase();
+    const contentType = MIME_TYPES[ext] || "application/octet-stream";
+    const stat = fs.statSync(resolved);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    // Handle HTTP Range requests for video and audio streaming
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      if (start >= fileSize || end >= fileSize) {
+        res.status(416).set("Content-Range", `bytes */${fileSize}`);
+        return res.end();
+      }
+
+      const chunksize = end - start + 1;
+      const file = fs.createReadStream(resolved, { start, end });
+      const head = {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunksize,
+        "Content-Type": contentType,
+      };
+
+      res.writeHead(206, head);
+      file.pipe(res);
+    } else {
+      const head = {
+        "Content-Length": fileSize,
+        "Content-Type": contentType,
+        "Accept-Ranges": "bytes",
+      };
+      res.writeHead(200, head);
+      fs.createReadStream(resolved).pipe(res);
+    }
   } catch (err) {
     console.error("Error serving media:", err.message);
     res.status(500).json({ error: "Failed to serve media" });

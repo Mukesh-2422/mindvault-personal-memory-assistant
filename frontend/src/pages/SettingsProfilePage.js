@@ -146,18 +146,12 @@ export default function SettingsProfilePage() {
   };
 
   return (
-    <div className="app" style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
+    <div className="app">
       <TopNav />
 
       <div
-        className="main-content"
+        className="main-content settings-sub-page"
         ref={containerRef}
-        style={{
-          maxWidth: "680px",
-          margin: "0 auto",
-          padding: "28px 20px 80px",
-          width: "100%",
-        }}
       >
         <button className="back-btn" onClick={goBack} aria-label="Go back">
           <ArrowLeft size={16} strokeWidth={1.5} />
@@ -176,13 +170,14 @@ export default function SettingsProfilePage() {
 
         {/* Main Profile Card */}
         <div
+          className="modern-settings-card"
           style={{
-            background: "var(--card-bg)",
-            border: "1px solid var(--border-color)",
             borderRadius: "20px",
-            boxShadow: "var(--shadow-md)",
+            boxShadow: "var(--shadow-lg)",
             overflow: "hidden",
             transition: "box-shadow var(--transition-base)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
           }}
         >
           <form onSubmit={handleSave} style={{ padding: "28px" }}>
@@ -568,16 +563,16 @@ export default function SettingsProfilePage() {
                     alignItems: "center",
                     gap: "8px",
                     padding: "10px 22px",
-                    fontSize: "13px",
+                    fontSize: "13.5px",
                     fontWeight: "700",
-                    borderRadius: "10px",
+                    borderRadius: "12px",
                     background: saving
                       ? "var(--text-tertiary)"
-                      : "var(--accent)",
+                      : "linear-gradient(135deg, var(--accent) 0%, var(--navy) 100%)",
                     color: "#FFFFFF",
                     border: "none",
                     cursor: saving ? "not-allowed" : "pointer",
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                    boxShadow: saving ? "none" : "0 4px 16px rgba(99, 102, 241, 0.35)",
                     transition: "all var(--transition-fast)",
                   }}
                   onMouseEnter={(e) => {

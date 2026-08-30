@@ -136,16 +136,70 @@ export default function NewMemoryPage() {
     };
   }, [audioUrl]);
 
+  const handleTypeChange = (newType) => {
+    setType(newType);
+    if (newType === "voice") {
+      setMediaData(null);
+      setMediaName("");
+      setSelectedFile(null);
+    } else if (newType === "image") {
+      setAudioBlob(null);
+      setAudioUrl(null);
+      setRecordingDuration(0);
+      if (selectedFile && !selectedFile.type.startsWith("image/")) {
+        setSelectedFile(null);
+        setMediaData(null);
+        setMediaName("");
+      }
+    } else if (newType === "video") {
+      setAudioBlob(null);
+      setAudioUrl(null);
+      setRecordingDuration(0);
+      if (selectedFile && !selectedFile.type.startsWith("video/")) {
+        setSelectedFile(null);
+        setMediaData(null);
+        setMediaName("");
+      }
+    } else if (newType === "checklist") {
+      setAudioBlob(null);
+      setAudioUrl(null);
+      setMediaData(null);
+      setMediaName("");
+      setSelectedFile(null);
+    } else if (newType === "text") {
+      setAudioBlob(null);
+      setAudioUrl(null);
+      setMediaData(null);
+      setMediaName("");
+      setSelectedFile(null);
+    }
+  };
+
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setMediaName(file.name);
     setSelectedFile(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setMediaData(ev.target.result);
-    };
-    reader.readAsDataURL(file);
+
+    const isVideo = file.type.startsWith("video/") || file.name.match(/\.(mp4|mov|m4v|webm|avi|mkv|3gp)$/i);
+    const isImage = file.type.startsWith("image/") || file.name.match(/\.(jpg|jpeg|png|gif|webp|svg|heic)$/i);
+    const isAudio = file.type.startsWith("audio/") || file.name.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i);
+
+    if (isVideo) {
+      setType("video");
+      setAudioBlob(null);
+      setAudioUrl(null);
+      setMediaData(URL.createObjectURL(file));
+    } else if (isImage) {
+      setType("image");
+      setAudioBlob(null);
+      setAudioUrl(null);
+      setMediaData(URL.createObjectURL(file));
+    } else if (isAudio) {
+      setType("voice");
+      setMediaData(null);
+      setAudioUrl(URL.createObjectURL(file));
+    }
   };
 
   const triggerFileUpload = (mimePrefix) => {
@@ -240,11 +294,13 @@ export default function NewMemoryPage() {
         }
       }
 
-      // All other types: upload file if needed, then create/update memory
-      if (!uploadedMedia && selectedFile) {
+      // Video & Image: upload file if new file was selected
+      if ((type === "image" || type === "video") && selectedFile) {
         uploadedMedia = await uploadFile(selectedFile);
         finalMediaUrl = uploadedMedia.url;
       }
+
+      const isMedia = type === "image" || type === "video" || type === "voice";
 
       let memoryData = {
         title: title || content?.substring(0, 50) || "Untitled",
@@ -253,13 +309,14 @@ export default function NewMemoryPage() {
         pinned,
         vaultId: saveToVault ? "vault" : null,
         checklist: type === "checklist" ? checklist.filter((c) => c.text) : undefined,
-        mediaData: mediaData || null,
-        mediaUrl: finalMediaUrl,
-        mediaName: uploadedMedia?.name || mediaName || null,
-        mediaType: uploadedMedia?.mimetype || null,
-        mediaSize: uploadedMedia?.size || null,
-        duration: finalDuration,
+        mediaData: isMedia ? (finalMediaUrl ? null : (mediaData?.startsWith("data:") ? mediaData : null)) : null,
+        mediaUrl: isMedia ? finalMediaUrl : null,
+        mediaName: isMedia ? (uploadedMedia?.name || mediaName || null) : null,
+        mediaType: isMedia ? (uploadedMedia?.mimetype || null) : null,
+        mediaSize: isMedia ? (uploadedMedia?.size || null) : null,
+        duration: type === "voice" ? finalDuration : null,
       };
+
 
       if (saveToVault) {
         if (state.vaultPin) {
@@ -279,6 +336,7 @@ export default function NewMemoryPage() {
       setSaving(false);
     }
   };
+
 
   const executeSavePayload = async (dataToSave) => {
     if (editId && existingMemory) {
@@ -557,23 +615,24 @@ export default function NewMemoryPage() {
       </div>
 
       <div className="memory-bottom-toolbar">
-        <button className="toolbar-btn" onClick={() => setType("voice")}>
+        <button className={`toolbar-btn ${type === "voice" ? "active" : ""}`} onClick={() => handleTypeChange("voice")}>
           <Mic size={20} strokeWidth={1.5} />
           <span>Voice</span>
         </button>
-        <button className="toolbar-btn" onClick={() => setType("image")}>
+        <button className={`toolbar-btn ${type === "image" ? "active" : ""}`} onClick={() => handleTypeChange("image")}>
           <Image size={20} strokeWidth={1.5} />
           <span>Image</span>
         </button>
-        <button className="toolbar-btn" onClick={() => setType("video")}>
+        <button className={`toolbar-btn ${type === "video" ? "active" : ""}`} onClick={() => handleTypeChange("video")}>
           <Video size={20} strokeWidth={1.5} />
           <span>Video</span>
         </button>
-        <button className="toolbar-btn" onClick={() => setType("checklist")}>
+        <button className={`toolbar-btn ${type === "checklist" ? "active" : ""}`} onClick={() => handleTypeChange("checklist")}>
           <CheckSquare size={20} strokeWidth={1.5} />
           <span>Checklist</span>
         </button>
       </div>
+
 
       {/* Vault PIN Modal */}
       {showPinModal && (

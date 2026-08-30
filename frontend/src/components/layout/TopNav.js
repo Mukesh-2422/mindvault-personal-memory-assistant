@@ -23,29 +23,17 @@ export default function TopNav() {
           className="nav-brand-btn"
           onClick={() => navigate("/home")}
           title="MindVault Home"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            fontWeight: "700",
-            fontSize: "16px",
-            color: "var(--accent)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            marginRight: "12px",
-            padding: "4px 8px",
-            borderRadius: "var(--radius-sm)",
-          }}
         >
-          <Brain size={22} strokeWidth={1.5} />
-          <span>MindVault</span>
+          <div className="nav-brand-icon-wrapper">
+            <Brain size={18} strokeWidth={2} />
+          </div>
+          <span className="nav-brand-title">MindVault</span>
         </button>
         <button
-          className={`nav-btn ${isActive("/search") ? "active" : ""}`}
+          className={`nav-btn nav-search-pill ${isActive("/search") ? "active" : ""}`}
           onClick={() => navigate("/search")}
         >
-          <Search size={16} strokeWidth={1.5} />
+          <Search size={15} strokeWidth={2} />
           <span>Search</span>
         </button>
       </div>

@@ -24,21 +24,28 @@ const PORT = process.env.PORT || 5000;
 // Trust proxy so express-rate-limit can correctly identify client IPs
 app.set("trust proxy", 1);
 
-// Security headers
-app.use(helmet());
+// Security headers — allow cross-origin resource policy for media streaming
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
 // CORS — allow only the React frontend
 app.use(cors({
   origin: "http://localhost:3000",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "Range"],
+  exposedHeaders: ["Content-Range", "Accept-Ranges", "Content-Length", "Content-Type"],
   credentials: true,
 }));
 
 // Handle OPTIONS preflight requests explicitly
 app.options("*", cors());
 
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ limit: "100mb", extended: true }));
+
 
 // Apply a global API rate limiter as a safety net
 app.use("/api", apiLimiter);
