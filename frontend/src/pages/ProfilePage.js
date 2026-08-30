@@ -124,20 +124,9 @@ export default function ProfilePage() {
           <div className="insight-row"><span className="insight-label">Pinned memories</span><span className="insight-value">{memories.filter((m) => m.pinned).length}</span></div>
         </div>
 
-        {/* Vault & Data Management */}
-        <p className="section-label" style={{ marginTop: 24 }}>Vault & Data Management</p>
+        {/* Data Management */}
+        <p className="section-label" style={{ marginTop: 24 }}>Data Management</p>
         <div className="profile-section">
-          <div className="profile-row" onClick={() => navigate("/vault")}>
-            <div className="profile-row-left">
-              <Lock size={18} strokeWidth={1.5} />
-              <div>
-                <div className="profile-row-text">Private Vault</div>
-                <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Encrypted secure space</div>
-              </div>
-            </div>
-            <span className="profile-row-arrow"><ChevronRight size={16} strokeWidth={1.5} /></span>
-          </div>
-
           <div className="profile-row" onClick={() => navigate("/deleted")}>
             <div className="profile-row-left">
               <Trash2 size={18} strokeWidth={1.5} />

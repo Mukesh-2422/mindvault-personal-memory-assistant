@@ -21,8 +21,8 @@ export default function TopNav() {
       <div className="nav-left">
         <button
           className="nav-brand-btn"
-          onClick={() => navigate("/home")}
-          title="MindVault Home"
+          onClick={() => navigate("/vault")}
+          title="Open Private Vault"
         >
           <div className="nav-brand-icon-wrapper">
             <Brain size={18} strokeWidth={2} />
