@@ -259,6 +259,39 @@ export function AppProvider({ children }) {
     }
   }, [state.vaultAutoLock]);
 
+  // Inactivity auto-lock for unlocked Vault
+  useEffect(() => {
+    if (state.vaultLocked || !state.isAuthenticated) return;
+
+    let timeoutMs = 5 * 60 * 1000; // default 5m
+    const setting = state.vaultAutoLock || "5m";
+    if (setting === "1m") timeoutMs = 1 * 60 * 1000;
+    else if (setting === "5m") timeoutMs = 5 * 60 * 1000;
+    else if (setting === "15m") timeoutMs = 15 * 60 * 1000;
+    else if (setting === "30m") timeoutMs = 30 * 60 * 1000;
+    else if (setting === "1h") timeoutMs = 60 * 60 * 1000;
+    else if (setting === "never") return;
+
+    let timer = setTimeout(() => {
+      dispatch({ type: "LOCK_VAULT" });
+    }, timeoutMs);
+
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        dispatch({ type: "LOCK_VAULT" });
+      }, timeoutMs);
+    };
+
+    const events = ["mousedown", "mousemove", "keydown", "touchstart", "scroll"];
+    events.forEach((ev) => window.addEventListener(ev, resetTimer, { passive: true }));
+
+    return () => {
+      clearTimeout(timer);
+      events.forEach((ev) => window.removeEventListener(ev, resetTimer));
+    };
+  }, [state.vaultLocked, state.vaultAutoLock, state.isAuthenticated]);
+
 
   // Check auth on mount
   useEffect(() => {
