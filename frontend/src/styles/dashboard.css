@@ -2024,7 +2024,7 @@
   font-family: inherit;
 }
 
-.empty-vault-card:hover {
+.empty-vault-card:hover { 
   background: rgba(37, 99, 235, 0.06);
   border-color: var(--accent, #2563eb);
   transform: translateY(-2px);

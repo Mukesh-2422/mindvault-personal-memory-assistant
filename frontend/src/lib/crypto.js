@@ -31,13 +31,7 @@ function getSubtleCrypto() {
   if (typeof globalThis !== "undefined" && globalThis.crypto && globalThis.crypto.subtle) {
     return globalThis.crypto.subtle;
   }
-  // Node.js fallback if available
-  try {
-    const nodeCrypto = require("crypto").webcrypto;
-    return nodeCrypto.subtle;
-  } catch (e) {
-    throw new Error("Web Crypto API (crypto.subtle) is not supported in this environment.");
-  }
+  throw new Error("Web Crypto API (crypto.subtle) is not supported in this environment.");
 }
 
 // Get the native crypto.getRandomValues function
@@ -48,12 +42,7 @@ function getRandomValues(array) {
   if (typeof globalThis !== "undefined" && globalThis.crypto && globalThis.crypto.getRandomValues) {
     return globalThis.crypto.getRandomValues(array);
   }
-  try {
-    const nodeCrypto = require("crypto");
-    return nodeCrypto.randomFillSync(array);
-  } catch (e) {
-    throw new Error("crypto.getRandomValues is not available.");
-  }
+  throw new Error("crypto.getRandomValues is not available.");
 }
 
 /**
