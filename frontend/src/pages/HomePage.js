@@ -2,13 +2,14 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import TopNav from "../components/layout/TopNav";
 import FAB from "../components/layout/FAB";
+import MemoryCard from "../components/memory/MemoryCard";
 import { useApp } from "../context/AppContext";
 import { formatTime } from "../utils/helpers";
 import { getOnThisDay } from "../data/dummyData";
 import {
   Brain, Mic, Send, Search, Play, Pause, FileText, Image as ImageIcon,
   Video as VideoIcon, CheckSquare, Sparkles, ArrowDown, Plus, ArrowUpRight, X,
-  Paperclip, ChevronDown, Link2, Bell
+  Paperclip, ChevronDown, Link2, Bell, Users, Layout, Calendar
 } from "lucide-react";
 
 import { getMediaUrl, transcribeAudio } from "../api/voice";
@@ -447,6 +448,7 @@ export default function HomePage() {
           m.reminders.forEach((r) => {
             if (r && r.title) {
               list.push({
+                id: `rem_${m.id || m._id}_${r.title}`,
                 memoryId: m.id || m._id,
                 memoryTitle: m.title,
                 title: r.title,
@@ -455,9 +457,37 @@ export default function HomePage() {
             }
           });
         }
+        const lowerTitle = (m.title || "").toLowerCase();
+        if (lowerTitle.includes("exam") || lowerTitle.includes("interview")) {
+          list.push({
+            id: `evt_${m.id || m._id}`,
+            memoryId: m.id || m._id,
+            memoryTitle: m.title,
+            title: m.title,
+            date: m.date,
+          });
+        }
       });
     return list.slice(0, 4);
   }, [state.memories]);
+
+  const pinnedMemories = React.useMemo(() => {
+    return (state.memories || []).filter((m) => m && !m.deleted && !m.vaultId && m.pinned);
+  }, [state.memories]);
+
+  const recentMemories = React.useMemo(() => {
+    return (state.memories || [])
+      .filter((m) => m && !m.deleted && !m.vaultId)
+      .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+      .slice(0, 4);
+  }, [state.memories]);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
 
 
   const streamRef = useRef(null);
@@ -985,178 +1015,7 @@ export default function HomePage() {
   return (
     <div className="app">
       <TopNav />
-      <div className={`main-content home-page ${isEmptyState ? "is-empty-state" : ""}`}>
-        {/* Skeleton Loader during initial data load */}
-        {isInitialLoading && (
-          <div className="dashboard-skeleton-container">
-            <div className="skeleton-hero-icon" />
-            <div className="skeleton-line skeleton-title" />
-            <div className="skeleton-line skeleton-subtitle" />
-            <div className="skeleton-cards-grid">
-              <div className="skeleton-card" />
-              <div className="skeleton-card" />
-              <div className="skeleton-card" />
-            </div>
-          </div>
-        )}
-
-        {/* Memory Recall - On This Day (Only shown if memories exist and enabled in settings) */}
-        {!isInitialLoading && hasMemories && onThisDay && (state.aiPreferences?.onThisDayEnabled !== false) && (
-          <div className="memory-recall-card" onClick={() => navigate(`/memory/${onThisDay.id || onThisDay._id}`, { state: { from: "/home" } })}>
-            <div className="recall-header">
-              <Sparkles size={16} strokeWidth={2} />
-              <span className="recall-label">On This Day</span>
-            </div>
-            <div className="recall-content">
-              <div className="recall-title">{onThisDay.title}</div>
-              <div className="recall-text">1 year ago today, you saved this memory.</div>
-            </div>
-            <div className="recall-action">View Memory →</div>
-          </div>
-        )}
-
-
-
-
-
-
-        {/* Empty State Onboarding View */}
-        {isEmptyState && (
-          <div className="empty-vault-onboarding">
-            <div className="empty-vault-illustration-container">
-              <svg
-                className="empty-vault-illustration"
-                viewBox="0 0 280 180"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <defs>
-                  <linearGradient id="vaultAura" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.14" />
-                    <stop offset="100%" stopColor="#0F2F5B" stopOpacity="0.03" />
-                  </linearGradient>
-                  <linearGradient id="accentBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2563eb" />
-                    <stop offset="100%" stopColor="#0F2F5B" />
-                  </linearGradient>
-                  <linearGradient id="softBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#60a5fa" />
-                    <stop offset="100%" stopColor="#3b82f6" />
-                  </linearGradient>
-                </defs>
-
-                {/* Soft ambient backdrop glow */}
-                <ellipse cx="140" cy="95" rx="85" ry="65" fill="url(#vaultAura)" />
-
-                {/* Modern clean shelf platform */}
-                <rect x="40" y="140" width="200" height="12" rx="6" fill="#e2e8f0" />
-                <line x1="48" y1="140" x2="232" y2="140" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" />
-
-                {/* Stylized Book 1 (Left) */}
-                <rect x="68" y="85" width="22" height="55" rx="4" fill="#0F2F5B" />
-                <rect x="73" y="93" width="12" height="3" rx="1.5" fill="#60a5fa" />
-
-                {/* Stylized Book 2 (Left-Mid) */}
-                <rect x="94" y="95" width="18" height="45" rx="3" fill="#2563eb" />
-                <rect x="98" y="102" width="10" height="3" rx="1.5" fill="#bfdbfe" />
-
-                {/* Centerpiece: Clean Open Memory Canvas / Journal */}
-                <rect x="118" y="65" width="84" height="75" rx="8" fill="#ffffff" stroke="#93c5fd" strokeWidth="2.5" />
-                <line x1="160" y1="66" x2="160" y2="139" stroke="#bfdbfe" strokeWidth="1.5" strokeDasharray="3 3" />
-                
-                {/* Journal content lines */}
-                <rect x="127" y="80" width="24" height="4" rx="2" fill="#bfdbfe" />
-                <rect x="127" y="90" width="20" height="3" rx="1.5" fill="#dbeafe" />
-                <rect x="127" y="98" width="22" height="3" rx="1.5" fill="#dbeafe" />
-
-                <rect x="168" y="80" width="24" height="4" rx="2" fill="#bfdbfe" />
-                <rect x="168" y="90" width="22" height="3" rx="1.5" fill="#dbeafe" />
-                <rect x="168" y="98" width="18" height="3" rx="1.5" fill="#dbeafe" />
-
-                {/* Stylized Leaning Book (Right) */}
-                <g transform="translate(206, 92) rotate(16)">
-                  <rect x="0" y="0" width="20" height="48" rx="4" fill="#3b82f6" />
-                  <rect x="4" y="8" width="12" height="3" rx="1.5" fill="#dbeafe" />
-                </g>
-
-                {/* Stylized Floating Star / Sparkle Accents */}
-                <g transform="translate(75, 48)">
-                  <path d="M7 0L8.6 4.6L13.2 6.2L8.6 7.8L7 12.4L5.4 7.8L0.8 6.2L5.4 4.6L7 0Z" fill="#2563eb" />
-                </g>
-                <g transform="translate(210, 52)">
-                  <path d="M5.5 0L6.7 3.6L10.3 4.8L6.7 6L5.5 9.6L4.3 6L0.7 4.8L4.3 3.6L5.5 0Z" fill="#60a5fa" />
-                </g>
-                <circle cx="138" cy="38" r="3" fill="#93c5fd" />
-              </svg>
-            </div>
-
-            <h1 className="empty-vault-title">Your Vault is Empty</h1>
-            <p className="empty-vault-subtitle">
-              This is where your saved memories, thoughts, and ideas will live. Let's capture your first one right now!
-            </p>
-
-            {/* Illustrative Starting Point Cards */}
-            <div className="empty-vault-cards">
-              <button
-                type="button"
-                className="empty-vault-card"
-                onClick={() => {
-                  setInput("Remember that ");
-                  inputRef.current?.focus();
-                }}
-              >
-                <span className="empty-card-icon">💡</span>
-                <span className="empty-card-text">Try a quick note</span>
-              </button>
-
-              <button
-                type="button"
-                className="empty-vault-card"
-                onClick={() => {
-                  setInput("Save link: ");
-                  inputRef.current?.focus();
-                }}
-              >
-                <span className="empty-card-icon">🔗</span>
-                <span className="empty-card-text">Save a link</span>
-              </button>
-
-              <button
-                type="button"
-                className="empty-vault-card"
-                onClick={() => {
-                  toggleListening();
-                }}
-              >
-                <span className="empty-card-icon">🎙️</span>
-                <span className="empty-card-text">Record a voice thought</span>
-              </button>
-            </div>
-
-            {/* Visual Downward Guide Arrow */}
-            <div className="empty-vault-guide">
-              <span className="guide-text">Type below or use voice to capture your first memory</span>
-              <div className="guide-arrow-bounce">
-                <ArrowDown size={18} strokeWidth={2.5} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Hero Section (Only shown when memories exist, no chat is active, and initial loading is complete) */}
-        {!isInitialLoading && hasMemories && messages.length === 0 && (
-          <div className="hero-section">
-            <div className="hero-icon">
-              <Brain size={48} strokeWidth={1.5} />
-            </div>
-            <h1 className="hero-title">MindVault</h1>
-            <p className="hero-subtitle">Your Second Brain</p>
-            <p className="hero-prompt">What would you like to remember today?</p>
-          </div>
-        )}
-
-
-
+      <div className="main-content home-page is-minimal-layout">
         {/* Chat Messages */}
         {messages.length > 0 && (
           <div className="chat-container">
@@ -1170,6 +1029,8 @@ export default function HomePage() {
                 const displaySources = referencedList.length > 0
                   ? referencedList
                   : (msg.selectedMemory || matchedMem ? [msg.selectedMemory || matchedMem] : []);
+
+                const isDisambiguation = msg.role === "assistant" && msg.requiresSelection && referencedList.length > 1;
 
                 return (
                   <div key={msg.id || msg._id || `msg_${index}`} className={`chat-message ${msg.role || "assistant"}`}>
@@ -1198,15 +1059,37 @@ export default function HomePage() {
                         {msg.answer || msg.content}
                       </div>
 
+                      {/* Multiple matches disambiguation cards */}
+                      {isDisambiguation && (
+                        <div className="chat-disambiguation-container">
+                          <div className="chat-disambiguation-prompt">
+                            Select a memory to recall details:
+                          </div>
+                          <div className="chat-disambiguation-grid">
+                            {referencedList.map((cand) => {
+                              const fullCand = (state.memories || []).find((m) => m && (m.id === (cand.id || cand._id) || m._id === (cand.id || cand._id))) || cand;
+                              return (
+                                <MemoryCard
+                                  key={cand.id || cand._id}
+                                  memory={fullCand}
+                                  showSelect={true}
+                                  selectLabel="Select"
+                                  onSelect={(selectedId, selectedObj) => handleSelectMemory(selectedId, selectedObj)}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Render Universal REFERENCED MEMORIES Pills & Dynamic Previews */}
-                      {msg.role === "assistant" && displaySources.length > 0 && (state.aiPreferences?.showSources !== false) && (
+                      {msg.role === "assistant" && !isDisambiguation && displaySources.length > 0 && (state.aiPreferences?.showSources !== false) && (
                         <ChatSourcePillsGroup
                           memories={displaySources}
                           allMemories={state.memories}
                           onNavigate={navigate}
                         />
                       )}
-
 
                       <div className="chat-time">{formatTime(msg.timestamp)}</div>
                     </div>

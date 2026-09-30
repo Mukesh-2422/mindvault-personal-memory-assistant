@@ -21,6 +21,16 @@ async function connect() {
       socketTimeoutMS: 45000,
     });
     console.log("MongoDB connected");
+    try {
+      const db = mongoose.connection.db;
+      await db.collection("memories").createIndex({ userId: 1, deleted: 1, date: -1 });
+      await db.collection("memories").createIndex({ userId: 1, type: 1 });
+      await db.collection("memories").createIndex({ userId: 1, tags: 1 });
+      await db.collection("people").createIndex({ userId: 1, name: 1 });
+      await db.collection("users").createIndex({ email: 1 }, { unique: true });
+    } catch (idxErr) {
+      // Non-blocking index creation
+    }
     return;
   }
 

@@ -3,11 +3,80 @@
    Based on Landing Page Design
    ============================================ */
 
-/* CSS Variables - Global Design System (Dark Blue Theme) */
+/* CSS Variables - Light Theme (Crisp White & Blue Theme) */
 :root,
-[data-theme="dark"],
 [data-theme="light"] {
-  /* Colors - MindVault Deep Navy & Electric Violet Brand System */
+  /* Colors - Clean White & Vibrant Blue Palette */
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F1F5F9;
+  --card-bg: #FFFFFF;
+  --card-hover: #F8FAFC;
+  
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+  
+  --border-color: #E2E8F0;
+  --border-light: #F1F5F9;
+  
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-active: #1E40AF;
+  --accent-light: rgba(37, 99, 235, 0.12);
+  --accent-subtle: rgba(37, 99, 235, 0.06);
+  --accent-gradient: linear-gradient(135deg, #0F2F5B 0%, #2563EB 50%, #38BDF8 100%);
+  
+  --navy: #0F2F5B;
+  --navy-hover: #0A2244;
+  
+  --success: #10B981;
+  --success-light: rgba(16, 185, 129, 0.12);
+  --warning: #F59E0B;
+  --warning-light: rgba(245, 158, 11, 0.12);
+  --danger: #EF4444;
+  --danger-light: rgba(239, 68, 68, 0.12);
+  
+  /* Typography */
+  --font-heading: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  
+  /* Border Radius - Modern Rounded Aesthetics */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  
+  /* Shadows - Soft Light Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07), 0 2px 4px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 25px -4px rgba(15, 23, 42, 0.1), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 20px 35px -6px rgba(15, 23, 42, 0.12), 0 8px 16px -4px rgba(15, 23, 42, 0.06);
+  
+  /* Transitions */
+  --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  /* Layout */
+  --nav-height: 64px;
+  --max-width: 800px;
+  --max-width-wide: 1200px;
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
   --bg-primary: #080B12;
   --bg-secondary: #0F1626;
   --bg-tertiary: #162035;
@@ -31,53 +100,11 @@
   --navy: #6366F1;
   --navy-hover: #4F46E5;
   
-  --success: #10B981;
-  --success-light: rgba(16, 185, 129, 0.2);
-  --warning: #F59E0B;
-  --warning-light: rgba(245, 158, 11, 0.2);
-  --danger: #EF4444;
-  --danger-light: rgba(239, 68, 68, 0.2);
-  
-  /* Typography */
-  --font-heading: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'SF Mono', 'Fira Code', 'Courier New', monospace;
-  
-  /* Spacing */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 12px;
-  --space-lg: 16px;
-  --space-xl: 24px;
-  --space-2xl: 32px;
-  --space-3xl: 48px;
-  
-  /* Border Radius - Modern Rounded Aesthetics */
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
-  --radius-xl: 26px;
-  --radius-full: 9999px;
-  
-  /* Shadows - Soft & Modern Glowing */
   --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
   --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.7);
-  
-  /* Transitions */
-  --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-base: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  
-  /* Layout */
-  --nav-height: 64px;
-  --max-width: 800px;
-  --max-width-wide: 1200px;
 }
-
-
-
 
 /* Reset & Base */
 *,
@@ -95,6 +122,22 @@ html {
 
 body {
   font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(at 15% 10%, rgba(37, 99, 235, 0.04) 0px, transparent 40%),
+    radial-gradient(at 85% 15%, rgba(59, 130, 246, 0.03) 0px, transparent 40%),
+    radial-gradient(rgba(37, 99, 235, 0.04) 1px, transparent 1px);
+  background-size: auto, auto, 24px 24px;
+  background-attachment: fixed;
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 15px;
+  transition: background-color var(--transition-base), color var(--transition-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[data-theme="dark"] body {
   background-color: #080B12;
   background-image: 
     radial-gradient(at 20% 0%, rgba(139, 92, 246, 0.2) 0px, transparent 50%),
@@ -104,13 +147,6 @@ body {
     radial-gradient(at 90% 90%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
     radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 1.2px);
   background-size: auto, auto, auto, auto, auto, 28px 28px;
-  background-attachment: fixed;
-  color: var(--text-primary);
-  line-height: 1.6;
-  font-size: 15px;
-  transition: background-color var(--transition-base), color var(--transition-base);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -199,40 +235,39 @@ img {
 }
 
 /* ============================================
+/* ============================================
    Navigation - Floating Themed Frosted Dock
    ============================================ */
 .top-nav {
   position: fixed;
-  top: 14px;
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 36px);
   max-width: 1140px;
-  height: 62px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  height: 60px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 22px;
+  border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
+  padding: 0 16px;
   z-index: 100;
   box-shadow: 
-    0 10px 30px rgba(99, 102, 241, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    0 10px 30px rgba(15, 23, 42, 0.08),
+    0 2px 6px rgba(15, 23, 42, 0.03);
   transition: all var(--transition-base);
 }
 
 [data-theme="dark"] .top-nav {
-  background: rgba(12, 16, 26, 0.85);
+  background: rgba(15, 23, 42, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.6),
-    0 0 24px rgba(139, 92, 246, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 12px 35px rgba(0, 0, 0, 0.45),
+    0 0 20px rgba(99, 102, 241, 0.12);
 }
 
 .nav-left,
@@ -250,12 +285,16 @@ img {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 5px 12px 5px 6px;
-  border-radius: 14px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 9999px;
   transition: all var(--transition-fast);
 }
 
 .nav-brand-btn:hover {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+[data-theme="dark"] .nav-brand-btn:hover {
   background: rgba(99, 102, 241, 0.08);
 }
 
@@ -263,13 +302,18 @@ img {
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  background: linear-gradient(135deg, #0F2F5B 0%, #2563EB 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
   transition: transform var(--transition-fast);
+}
+
+[data-theme="dark"] .nav-brand-icon-wrapper {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
 }
 
 .nav-brand-btn:hover .nav-brand-icon-wrapper {
@@ -280,19 +324,25 @@ img {
   font-family: var(--font-heading);
   font-size: 16px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent) 100%);
+  background: linear-gradient(135deg, #0F2F5B 0%, #2563EB 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.02em;
 }
 
+[data-theme="dark"] .nav-brand-title {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 /* Search Pill */
 .nav-search-pill {
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.16);
-  color: var(--text-secondary);
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  color: #64748B;
   padding: 6px 14px;
-  border-radius: 12px;
+  border-radius: 9999px;
   font-size: 13.5px;
   font-weight: 500;
   transition: all var(--transition-fast);
@@ -300,26 +350,38 @@ img {
 
 .nav-search-pill:hover,
 .nav-search-pill.active {
-  background: rgba(99, 102, 241, 0.12);
-  border-color: var(--accent);
-  color: var(--accent);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+  background: #E2E8F0;
+  border-color: #CBD5E1;
+  color: #2563EB;
+}
+
+[data-theme="dark"] .nav-search-pill {
+  background: rgba(22, 32, 53, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #94A3B8;
+}
+
+[data-theme="dark"] .nav-search-pill:hover,
+[data-theme="dark"] .nav-search-pill.active {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #C4B5FD;
 }
 
 /* Center Segmented Pill Container */
 .nav-center {
   display: flex;
   align-items: center;
-  background: rgba(0, 0, 0, 0.035);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-radius: 14px;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 9999px;
   padding: 3px;
   gap: 3px;
 }
 
 [data-theme="dark"] .nav-center {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .nav-btn {
@@ -327,37 +389,37 @@ img {
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border-radius: 10px;
+  border-radius: 9999px;
   font-size: 13.5px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: #64748B;
   transition: all var(--transition-fast);
   border: none;
   cursor: pointer;
 }
 
 .nav-btn:hover {
-  color: var(--text-primary);
+  color: #0F172A;
   background: rgba(0, 0, 0, 0.04);
 }
 
 [data-theme="dark"] .nav-btn:hover {
   background: rgba(255, 255, 255, 0.06);
-  color: #f8fafc;
+  color: #F8FAFC;
 }
 
 .nav-btn.active {
-  color: var(--accent);
-  background: var(--card-bg);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  color: #2563EB;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
   font-weight: 600;
 }
 
 [data-theme="dark"] .nav-btn.active {
-  background: rgba(139, 92, 246, 0.2);
+  background: rgba(139, 92, 246, 0.22);
   border: 1px solid rgba(139, 92, 246, 0.35);
-  color: #c4b5fd;
-  box-shadow: 0 0 14px rgba(139, 92, 246, 0.25);
+  color: #C4B5FD;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Nav Right & Avatar */
@@ -365,7 +427,7 @@ img {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  background: linear-gradient(135deg, #0F2F5B 0%, #2563EB 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -374,17 +436,22 @@ img {
   font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   border: 2px solid #ffffff;
 }
 
 [data-theme="dark"] .nav-avatar {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
   border-color: rgba(255, 255, 255, 0.15);
   box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
 }
 
 .nav-avatar:hover {
   transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+}
+
+[data-theme="dark"] .nav-avatar:hover {
   box-shadow: 0 4px 14px rgba(99, 102, 241, 0.5);
 }
 

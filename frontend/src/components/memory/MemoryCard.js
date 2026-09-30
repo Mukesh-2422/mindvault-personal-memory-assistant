@@ -1,63 +1,93 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Pin } from "lucide-react";
+import { Pin, ArrowUpRight, CheckCircle2 } from "lucide-react";
 import { formatDate, getMemoryTypeIcon, truncate } from "../../utils/helpers";
 import { getMediaUrl } from "../../api/voice";
 
-export default function MemoryCard({ memory }) {
+export default function MemoryCard({
+  memory,
+  onSelect,
+  showSelect = false,
+  selectLabel = "Select →",
+}) {
   const navigate = useNavigate();
   const location = useLocation();
 
   if (!memory) return null;
 
-  const openMemory = () =>
-    navigate(`/memory/${memory.id || memory._id}`, { state: { from: location.pathname } });
+  const memId = memory.id || memory._id;
 
-  const typeIcon = getMemoryTypeIcon(memory.type, 20);
+  const handleClick = (e) => {
+    if (showSelect && onSelect) {
+      e.stopPropagation();
+      onSelect(memId, memory);
+      return;
+    }
+    navigate(`/memory/${memId}`, { state: { from: location.pathname } });
+  };
+
+  const typeIcon = getMemoryTypeIcon(memory.type, 16);
 
   const getPreview = () => {
     if (memory.type === "checklist" && memory.checklist) {
       const done = memory.checklist.filter((c) => c.done).length;
-      return `${done}/${memory.checklist.length} completed`;
+      return `${done}/${memory.checklist.length} items completed`;
     }
     if (memory.type === "voice") {
-      return `Voice note \u2022 ${memory.duration || "\u2014"}`;
+      return memory.duration ? `Voice memo (${memory.duration})` : "Voice memo recording";
     }
     if (memory.type === "image") {
-      return memory.mediaUrl ? "Image attached" : "Image memory";
+      return memory.content || "Photo memory with attached image";
     }
     if (memory.type === "video") {
-      return memory.mediaUrl ? "Video attached" : "Video memory";
+      return memory.content || "Video memory with attached recording";
     }
-    return truncate(memory.content, 110);
+    return truncate(memory.content || "No text content", 120);
   };
+
+  const mediaSource = memory.mediaUrl || memory.mediaData;
 
   return (
     <div
-      className="memory-card"
-      onClick={openMemory}
+      className={`memory-card ${showSelect ? "memory-card-selectable" : ""}`}
+      onClick={handleClick}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && openMemory()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick(e);
+        }
+      }}
+      aria-label={`Open memory: ${memory.title || "Untitled"}`}
     >
       <div className="memory-card-header">
-        <span className="memory-card-title">{memory.title}</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="memory-card-title-group">
+          <span className="memory-card-type-icon">{typeIcon}</span>
+          <span className="memory-card-title">{memory.title || "Untitled"}</span>
+        </div>
+        <div className="memory-card-header-actions">
           {memory.pinned && (
-            <span className="pin-icon" title="Pinned">
-              <Pin size={14} strokeWidth={2} />
+            <span className="pin-icon" title="Pinned memory">
+              <Pin size={13} strokeWidth={2.2} />
             </span>
           )}
-          <span className="memory-card-type">{typeIcon}</span>
+          {memory.category && (
+            <span className="memory-card-category-badge">{memory.category}</span>
+          )}
         </div>
       </div>
 
-      {(memory.type === "image" || memory.type === "video") && (memory.mediaUrl || memory.mediaData) ? (
-        <div style={{ marginBottom: 8, borderRadius: "var(--radius-sm)", overflow: "hidden", maxHeight: 120 }}>
+      {(memory.type === "image" || memory.type === "video") && mediaSource ? (
+        <div className="memory-card-media-preview">
           {memory.type === "image" ? (
-            <img src={getMediaUrl(memory.mediaUrl || memory.mediaData)} alt={memory.title} style={{ width: "100%", height: 120, objectFit: "cover" }} />
+            <img
+              src={getMediaUrl(mediaSource)}
+              alt={memory.title || "Memory attachment"}
+              loading="lazy"
+            />
           ) : (
-            <video src={getMediaUrl(memory.mediaUrl || memory.mediaData)} style={{ width: "100%", height: 120, objectFit: "cover" }} />
+            <video src={getMediaUrl(mediaSource)} preload="metadata" />
           )}
         </div>
       ) : null}
@@ -65,22 +95,44 @@ export default function MemoryCard({ memory }) {
       <p className="memory-card-content">{getPreview()}</p>
 
       <div className="memory-card-footer">
-        <span className="memory-card-date">{formatDate(memory.date)}</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span className="memory-card-date">
+          {memory.date ? formatDate(memory.date) : "Recent"}
+        </span>
+
+        <div className="memory-card-tags-row">
           {memory.tags && memory.tags.length > 0 && (
             <div className="memory-card-tags">
               {memory.tags.slice(0, 2).map((tag) => (
                 <span key={tag} className="tag">
-                  {tag}
+                  #{tag}
                 </span>
               ))}
               {memory.tags.length > 2 && (
-                <span className="tag">+{memory.tags.length - 2}</span>
+                <span className="tag tag-more">+{memory.tags.length - 2}</span>
               )}
             </div>
+          )}
+
+          {showSelect ? (
+            <button
+              type="button"
+              className="memory-card-select-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onSelect) onSelect(memId, memory);
+              }}
+            >
+              <span>{selectLabel}</span>
+              <CheckCircle2 size={13} />
+            </button>
+          ) : (
+            <span className="memory-card-open-hint" title="Open memory">
+              <ArrowUpRight size={13} />
+            </span>
           )}
         </div>
       </div>
     </div>
   );
 }
+

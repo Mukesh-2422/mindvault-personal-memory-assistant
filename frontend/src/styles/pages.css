@@ -2416,3 +2416,377 @@
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
 }
+
+/* ============================================
+   Collections Page Upgrades
+   ============================================ */
+.collections-header-title-box,
+.timeline-header-title-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.collections-subtitle,
+.timeline-subtitle {
+  font-size: 13.5px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.collections-tabs-bar {
+  display: flex;
+  gap: 8px;
+  margin: var(--space-md) 0 var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.collections-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.collections-tab-btn.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.collections-tab-badge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+}
+
+.collections-tab-btn.active .collections-tab-badge {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.collections-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: var(--space-lg);
+}
+
+.collections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.collection-card-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  min-height: 130px;
+}
+
+.collection-card-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  background: var(--card-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.collection-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.collection-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--accent-light);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collection-count-badge {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+}
+
+.collection-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.collection-card-desc {
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.collection-detail-title-box {
+  display: flex;
+  align-items: center;
+}
+
+.collection-detail-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.collection-count-tag {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.collection-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.collection-search-bar input {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.collection-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+/* ============================================
+   Timeline Page Upgrades
+   ============================================ */
+.timeline-filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: var(--space-md) 0 var(--space-xl);
+}
+
+.timeline-years-bar,
+.timeline-types-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.timeline-years-bar::-webkit-scrollbar,
+.timeline-types-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+  position: relative;
+}
+
+.timeline-group-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.timeline-month-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.timeline-month-badge {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.timeline-month-count {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.timeline-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-left: 8px;
+}
+
+.timeline-node {
+  display: flex;
+  gap: 14px;
+  position: relative;
+}
+
+.timeline-node-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 16px;
+  padding-top: 14px;
+}
+
+.timeline-node-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  flex-shrink: 0;
+}
+
+.timeline-node-line {
+  flex: 1;
+  width: 2px;
+  background: var(--border-color);
+  margin-top: 6px;
+}
+
+.timeline-node-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ============================================
+   Person Detail Page Upgrades
+   ============================================ */
+.person-relationship-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(236, 72, 153, 0.15);
+  color: #ec4899;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.person-ai-summary-card {
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  margin: var(--space-md) 0 var(--space-lg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.ai-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ai-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ai-summary-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.ai-summary-btn:hover {
+  background: var(--accent-hover);
+}
+
+.ai-summary-text {
+  font-size: 13.5px;
+  color: var(--text-primary);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.ai-summary-placeholder {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.person-topics-section {
+  margin: var(--space-md) 0;
+}
+
+.person-topics-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.person-topic-pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}

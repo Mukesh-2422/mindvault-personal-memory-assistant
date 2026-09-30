@@ -3,7 +3,23 @@ import TopNav from "../components/layout/TopNav";
 import MemoryCard from "../components/memory/MemoryCard";
 import { useApp } from "../context/AppContext";
 import { useAppBackNavigation } from "../utils/useAppBackNavigation";
-import { Search, FileText, Mic, Image, Video, CheckSquare, Pin, X, SearchX, ArrowLeft } from "lucide-react";
+import {
+  Search,
+  FileText,
+  Mic,
+  Image,
+  Video,
+  CheckSquare,
+  Pin,
+  X,
+  SearchX,
+  ArrowLeft,
+  Briefcase,
+  GraduationCap,
+  Plane,
+  User,
+  Lightbulb,
+} from "lucide-react";
 import "../styles/global.css";
 import "../styles/pages.css";
 
@@ -15,6 +31,11 @@ const FILTERS = [
   { label: "Video", value: "video", icon: Video },
   { label: "Checklist", value: "checklist", icon: CheckSquare },
   { label: "Pinned", value: "pinned", icon: Pin },
+  { label: "Studies", value: "cat:studies", icon: GraduationCap },
+  { label: "Work", value: "cat:work", icon: Briefcase },
+  { label: "Travel", value: "cat:travel", icon: Plane },
+  { label: "Personal", value: "cat:personal", icon: User },
+  { label: "Ideas", value: "cat:ideas", icon: Lightbulb },
 ];
 
 const EXAMPLE_QUERIES = [
@@ -108,12 +129,17 @@ export default function SearchPage() {
   };
 
   const results = useMemo(() => {
-    let mems = state.memories.filter((m) => !m.deleted);
+    let mems = state.memories.filter((m) => !m.deleted && !m.vaultId);
 
     if (activeFilter === "pinned") {
       mems = mems.filter((m) => m.pinned);
+    } else if (activeFilter.startsWith("cat:")) {
+      const catName = activeFilter.replace("cat:", "").toLowerCase();
+      mems = mems.filter(
+        (m) => m.category && String(m.category).toLowerCase().includes(catName)
+      );
     } else if (activeFilter !== "all") {
-      mems = mems.filter((m) => m.type === activeFilter);
+      mems = mems.filter((m) => (m.type || "text") === activeFilter);
     }
 
     if (!query.trim()) return mems;
@@ -242,9 +268,9 @@ export default function SearchPage() {
             </p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="dashboard-cards-grid">
             {results.map((m) => (
-              <MemoryCard key={m.id} memory={m} />
+              <MemoryCard key={m.id || m._id} memory={m} />
             ))}
           </div>
         )}
@@ -252,3 +278,4 @@ export default function SearchPage() {
     </div>
   );
 }
+
