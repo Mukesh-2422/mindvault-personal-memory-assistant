@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import TopNav from "../components/layout/TopNav";
 import FAB from "../components/layout/FAB";
@@ -1012,13 +1012,302 @@ export default function HomePage() {
   const isInitialLoading = loading || (!state.dataLoaded && state.loading);
   const isEmptyState = !isInitialLoading && !hasMemories && messages.length === 0;
 
+  const [activeAction, setActiveAction] = useState("ask");
+
+  const suggestedQuestions = useMemo(() => {
+    return [
+      { icon: <Sparkles size={14} />, text: "What did I save recently?" },
+      { icon: <Calendar size={14} />, text: "Do I have any upcoming reminders?" },
+      { icon: <Mic size={14} />, text: "Summarize my voice memories" },
+      { icon: <Brain size={14} />, text: "Find my notes about exams or interviews" },
+    ];
+  }, []);
+
+  const renderInputBar = (isCenter = false) => (
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={fileAccept}
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+
+      {/* Attachment Preview Chip */}
+      {attachedFile && (
+        <div className="chat-attachment-chip">
+          {attachedFile.type === "image" ? (
+            <img src={attachedFile.previewUrl} alt={attachedFile.name} className="attachment-chip-thumb" />
+          ) : attachedFile.type === "voice" ? (
+            <div className="attachment-chip-icon-box"><Mic size={14} /></div>
+          ) : (
+            <div className="attachment-chip-icon-box"><FileText size={14} /></div>
+          )}
+          <div className="attachment-chip-info">
+            <span className="attachment-chip-name">{attachedFile.name}</span>
+            <span className="attachment-chip-size">
+              {(attachedFile.size / 1024).toFixed(0)} KB
+            </span>
+          </div>
+          <button
+            type="button"
+            className="attachment-chip-remove"
+            onClick={() => setAttachedFile(null)}
+            title="Remove attachment"
+            aria-label="Remove attachment"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Floating Chat Error Banner */}
+      {chatError && (
+        <div className="chat-floating-error">
+          <span>{chatError}</span>
+          <button
+            type="button"
+            className="chat-floating-error-close"
+            onClick={() => setChatError(null)}
+            title="Dismiss message"
+            aria-label="Dismiss message"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      <div className={`chat-input-box capsule-input-bar ${isCenter ? "dashboard-center-input-box" : ""} ${isVoiceRecording || isTranscribing ? "recording-active" : ""}`}>
+        {isVoiceRecording || isTranscribing ? (
+          <div className="chat-voice-active-bar">
+            <div className="voice-active-indicator">
+              <span className={`voice-active-pulse-dot ${isTranscribing ? "transcribing" : ""}`} />
+              <span className="voice-active-timer">
+                {isTranscribing ? "Processing..." : formatRecordingTime(recordingTime)}
+              </span>
+            </div>
+            <div className="voice-active-wave" title="Audio level meter">
+              <span className="voice-wave-bar bar-1" style={{ transform: `scaleY(${isTranscribing ? 0.6 : Math.max(0.3, audioLevel * 1.5)})` }} />
+              <span className="voice-wave-bar bar-2" style={{ transform: `scaleY(${isTranscribing ? 0.9 : Math.max(0.4, audioLevel * 1.9)})` }} />
+              <span className="voice-wave-bar bar-3" style={{ transform: `scaleY(${isTranscribing ? 1.2 : Math.max(0.5, audioLevel * 2.4)})` }} />
+              <span className="voice-wave-bar bar-4" style={{ transform: `scaleY(${isTranscribing ? 0.8 : Math.max(0.3, audioLevel * 1.6)})` }} />
+              <span className="voice-wave-bar bar-5" style={{ transform: `scaleY(${isTranscribing ? 1.1 : Math.max(0.5, audioLevel * 2.2)})` }} />
+              <span className="voice-wave-bar bar-6" style={{ transform: `scaleY(${isTranscribing ? 0.9 : Math.max(0.4, audioLevel * 1.8)})` }} />
+              <span className="voice-wave-bar bar-7" style={{ transform: `scaleY(${isTranscribing ? 0.5 : Math.max(0.3, audioLevel * 1.4)})` }} />
+            </div>
+            <div className="voice-active-text" title={isTranscribing ? "Transcribing audio..." : (voiceTranscript || "Listening...")}>
+              {isTranscribing ? (
+                <span className="voice-listening-placeholder voice-transcribing-text">
+                  Transcribing audio with Whisper STT...
+                </span>
+              ) : voiceTranscript ? (
+                <span className="voice-transcript-text">"{voiceTranscript}"</span>
+              ) : (
+                <span className="voice-listening-placeholder">Listening... Speak your query...</span>
+              )}
+            </div>
+            <div className="voice-active-actions">
+              <button
+                type="button"
+                className="voice-action-btn cancel"
+                onClick={cancelVoiceSearch}
+                title="Cancel voice search"
+                aria-label="Cancel voice search"
+                disabled={isTranscribing}
+              >
+                <X size={16} />
+              </button>
+              <button
+                type="button"
+                className="voice-action-btn submit"
+                onClick={() => finishVoiceSearch(true)}
+                title="Search memories with this voice query"
+                aria-label="Search memories with this voice query"
+                disabled={isTranscribing}
+              >
+                <Send size={15} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="chat-add-btn-wrapper" ref={attachMenuRef}>
+              <button
+                type="button"
+                className="chat-add-btn"
+                onClick={() => setAttachMenuOpen((prev) => !prev)}
+                title="Attach file or media to search"
+                aria-label="Attach file or media to search"
+              >
+                <Plus size={18} strokeWidth={2.5} style={{ transform: attachMenuOpen ? "rotate(45deg)" : "none", transition: "transform 0.2s" }} />
+              </button>
+
+              {/* Attachment Options Popover */}
+              {attachMenuOpen && (
+                <div className="chat-attachment-popover">
+                  <button
+                    type="button"
+                    className="attachment-popover-item"
+                    onClick={() => triggerFileSelect("image/*")}
+                  >
+                    <span className="attachment-popover-icon"><ImageIcon size={16} /></span>
+                    <span className="attachment-popover-text">Upload Image</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="attachment-popover-item"
+                    onClick={() => triggerFileSelect("audio/*")}
+                  >
+                    <span className="attachment-popover-icon"><Mic size={16} /></span>
+                    <span className="attachment-popover-text">Upload Audio</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="attachment-popover-item"
+                    onClick={() => triggerFileSelect(".pdf,.doc,.docx,.txt,.md,application/pdf,text/*")}
+                  >
+                    <span className="attachment-popover-icon"><FileText size={16} /></span>
+                    <span className="attachment-popover-text">Upload Document/File</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <textarea
+              ref={inputRef}
+              className="chat-input"
+              placeholder={attachedFile ? `Ask about "${attachedFile.name}"...` : "Ask MindVault anything or type a thought..."}
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <div className="chat-input-actions-right">
+              <button
+                type="button"
+                className={`chat-mic-btn ${isVoiceRecording ? "recording" : ""}`}
+                title={isVoiceRecording ? "Stop and search memory" : "Search or ask memory using voice"}
+                onClick={isVoiceRecording ? finishVoiceSearch : startVoiceSearch}
+              >
+                <Mic size={18} strokeWidth={1.75} />
+              </button>
+              <button
+                type="button"
+                className="chat-send-btn"
+                onClick={() => handleSend()}
+                disabled={(!input.trim() && !attachedFile) || isTyping}
+                title="Send"
+              >
+                <Send size={16} strokeWidth={2} />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
+
   return (
     <div className="app">
       <TopNav />
-      <div className="main-content home-page is-minimal-layout">
-        {/* Chat Messages */}
-        {messages.length > 0 && (
+      {messages.length === 0 ? (
+        /* Centered MindVault AI Dashboard */
+        <div className="main-content home-page is-centered-dashboard">
+          <div className="dashboard-hero-container">
+            {/* Welcome Greeting & Subtitle */}
+            <div className="dashboard-hero-header">
+              <h1 className="dashboard-hero-title">
+                {getGreeting()}, {state.user?.name || "Friend"} 👋
+              </h1>
+              <p className="dashboard-hero-subtitle">
+                Ask your second brain anything below, search memories, or capture a new thought.
+              </p>
+            </div>
+
+            {/* Find, Ask AI, and Capture Action Buttons */}
+            <div className="dashboard-actions-row">
+              <button
+                type="button"
+                className={`dashboard-action-pill ${activeAction === "ask" ? "active" : ""}`}
+                onClick={() => {
+                  setActiveAction("ask");
+                  inputRef.current?.focus();
+                }}
+              >
+                <Sparkles size={16} strokeWidth={2} />
+                <span>Ask AI</span>
+              </button>
+
+              <button
+                type="button"
+                className="dashboard-action-pill"
+                onClick={() => {
+                  setActiveAction("find");
+                  navigate("/search");
+                }}
+                title="Search memories with filters"
+              >
+                <Search size={16} strokeWidth={2} />
+                <span>Find</span>
+              </button>
+
+              <button
+                type="button"
+                className="dashboard-action-pill"
+                onClick={() => {
+                  setActiveAction("capture");
+                  navigate("/new");
+                }}
+                title="Capture a new memory"
+              >
+                <Plus size={16} strokeWidth={2} />
+                <span>Capture</span>
+              </button>
+            </div>
+
+            {/* Main Ask MindVault Center Input */}
+            <div className="dashboard-center-input-wrap">
+              {renderInputBar(true)}
+            </div>
+
+            {/* Suggested Question Chips */}
+            <div className="dashboard-suggestions-section">
+              <div className="dashboard-suggestions-label">Suggested Questions</div>
+              <div className="dashboard-chips-grid">
+                {suggestedQuestions.map((q, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="dashboard-chip-btn"
+                    onClick={() => handleSend(q.text)}
+                  >
+                    <span className="dashboard-chip-icon">{q.icon}</span>
+                    <span>{q.text}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Active Conversation Stream */
+        <div className="main-content home-page is-minimal-layout">
           <div className="chat-container">
+            <div className="chat-stream-header">
+              <div className="chat-stream-title">
+                <Brain size={16} strokeWidth={1.8} />
+                <span>MindVault Conversation</span>
+              </div>
+              <button
+                type="button"
+                className="chat-new-chat-btn"
+                onClick={() => dispatch({ type: "CLEAR_CHAT_MESSAGES" })}
+                title="Start a new search or question"
+              >
+                <Plus size={13} strokeWidth={2.5} />
+                <span>New Chat</span>
+              </button>
+            </div>
             <div className="chat-messages">
               {messages.map((msg, index) => {
                 const referencedList = msg.referencedMemories || msg.relatedMemories || [];
@@ -1125,191 +1414,13 @@ export default function HomePage() {
               <div ref={messagesEndRef} />
             </div>
           </div>
-        )}
 
-        {/* Input Bar */}
-        <div className="chat-input-wrapper">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={fileAccept}
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
-
-          {/* Attachment Preview Chip */}
-          {attachedFile && (
-            <div className="chat-attachment-chip">
-              {attachedFile.type === "image" ? (
-                <img src={attachedFile.previewUrl} alt={attachedFile.name} className="attachment-chip-thumb" />
-              ) : attachedFile.type === "voice" ? (
-                <div className="attachment-chip-icon-box"><Mic size={14} /></div>
-              ) : (
-                <div className="attachment-chip-icon-box"><FileText size={14} /></div>
-              )}
-              <div className="attachment-chip-info">
-                <span className="attachment-chip-name">{attachedFile.name}</span>
-                <span className="attachment-chip-size">
-                  {(attachedFile.size / 1024).toFixed(0)} KB
-                </span>
-              </div>
-              <button
-                type="button"
-                className="attachment-chip-remove"
-                onClick={() => setAttachedFile(null)}
-                title="Remove attachment"
-                aria-label="Remove attachment"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          )}
-
-          {/* Floating Chat Error Banner */}
-          {chatError && (
-            <div className="chat-floating-error">
-              <span>{chatError}</span>
-              <button
-                type="button"
-                className="chat-floating-error-close"
-                onClick={() => setChatError(null)}
-                title="Dismiss message"
-                aria-label="Dismiss message"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          )}
-
-          <div className={`chat-input-box capsule-input-bar ${isEmptyState ? "empty-onboarding-input" : ""} ${isVoiceRecording || isTranscribing ? "recording-active" : ""}`}>
-            {isVoiceRecording || isTranscribing ? (
-              <div className="chat-voice-active-bar">
-                <div className="voice-active-indicator">
-                  <span className={`voice-active-pulse-dot ${isTranscribing ? "transcribing" : ""}`} />
-                  <span className="voice-active-timer">
-                    {isTranscribing ? "Processing..." : formatRecordingTime(recordingTime)}
-                  </span>
-                </div>
-                <div className="voice-active-wave" title="Audio level meter">
-                  <span className="voice-wave-bar bar-1" style={{ transform: `scaleY(${isTranscribing ? 0.6 : Math.max(0.3, audioLevel * 1.5)})` }} />
-                  <span className="voice-wave-bar bar-2" style={{ transform: `scaleY(${isTranscribing ? 0.9 : Math.max(0.4, audioLevel * 1.9)})` }} />
-                  <span className="voice-wave-bar bar-3" style={{ transform: `scaleY(${isTranscribing ? 1.2 : Math.max(0.5, audioLevel * 2.4)})` }} />
-                  <span className="voice-wave-bar bar-4" style={{ transform: `scaleY(${isTranscribing ? 0.8 : Math.max(0.3, audioLevel * 1.6)})` }} />
-                  <span className="voice-wave-bar bar-5" style={{ transform: `scaleY(${isTranscribing ? 1.1 : Math.max(0.5, audioLevel * 2.2)})` }} />
-                  <span className="voice-wave-bar bar-6" style={{ transform: `scaleY(${isTranscribing ? 0.9 : Math.max(0.4, audioLevel * 1.8)})` }} />
-                  <span className="voice-wave-bar bar-7" style={{ transform: `scaleY(${isTranscribing ? 0.5 : Math.max(0.3, audioLevel * 1.4)})` }} />
-                </div>
-                <div className="voice-active-text" title={isTranscribing ? "Transcribing audio..." : (voiceTranscript || "Listening...")}>
-                  {isTranscribing ? (
-                    <span className="voice-listening-placeholder voice-transcribing-text">
-                      Transcribing audio with Whisper STT...
-                    </span>
-                  ) : voiceTranscript ? (
-                    <span className="voice-transcript-text">"{voiceTranscript}"</span>
-                  ) : (
-                    <span className="voice-listening-placeholder">Listening... Speak your query (e.g. "Where did I put my keys?")...</span>
-                  )}
-                </div>
-                <div className="voice-active-actions">
-                  <button
-                    type="button"
-                    className="voice-action-btn cancel"
-                    onClick={cancelVoiceSearch}
-                    title="Cancel voice search"
-                    aria-label="Cancel voice search"
-                    disabled={isTranscribing}
-                  >
-                    <X size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    className="voice-action-btn submit"
-                    onClick={() => finishVoiceSearch(true)}
-                    title="Search memories with this voice query"
-                    aria-label="Search memories with this voice query"
-                    disabled={isTranscribing}
-                  >
-                    <Send size={15} />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="chat-add-btn-wrapper" ref={attachMenuRef}>
-                  <button
-                    type="button"
-                    className="chat-add-btn"
-                    onClick={() => setAttachMenuOpen((prev) => !prev)}
-                    title="Attach file or media to search"
-                    aria-label="Attach file or media to search"
-                  >
-                    <Plus size={18} strokeWidth={2.5} style={{ transform: attachMenuOpen ? "rotate(45deg)" : "none", transition: "transform 0.2s" }} />
-                  </button>
-
-                  {/* Attachment Options Popover */}
-                  {attachMenuOpen && (
-                    <div className="chat-attachment-popover">
-                      <button
-                        type="button"
-                        className="attachment-popover-item"
-                        onClick={() => triggerFileSelect("image/*")}
-                      >
-                        <span className="attachment-popover-icon"><ImageIcon size={16} /></span>
-                        <span className="attachment-popover-text">Upload Image</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="attachment-popover-item"
-                        onClick={() => triggerFileSelect("audio/*")}
-                      >
-                        <span className="attachment-popover-icon"><Mic size={16} /></span>
-                        <span className="attachment-popover-text">Upload Audio</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="attachment-popover-item"
-                        onClick={() => triggerFileSelect(".pdf,.doc,.docx,.txt,.md,application/pdf,text/*")}
-                      >
-                        <span className="attachment-popover-icon"><FileText size={16} /></span>
-                        <span className="attachment-popover-text">Upload Document/File</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <textarea
-                  ref={inputRef}
-                  className="chat-input"
-                  placeholder={attachedFile ? `Ask about "${attachedFile.name}"...` : "Type or speak your memory..."}
-                  rows={1}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
-                <div className="chat-input-actions-right">
-                  <button
-                    type="button"
-                    className={`chat-mic-btn ${isVoiceRecording ? "recording" : ""}`}
-                    title={isVoiceRecording ? "Stop and search memory" : "Search or ask memory using voice"}
-                    onClick={isVoiceRecording ? finishVoiceSearch : startVoiceSearch}
-                  >
-                    <Mic size={18} strokeWidth={1.75} />
-                  </button>
-                  <button
-                    type="button"
-                    className="chat-send-btn"
-                    onClick={handleSend}
-                    disabled={(!input.trim() && !attachedFile) || isTyping}
-                    title="Send"
-                  >
-                    <Send size={16} strokeWidth={2} />
-                  </button>
-                </div>
-              </>
-            )}
+          {/* Docked Bottom Input Bar */}
+          <div className="chat-input-wrapper">
+            {renderInputBar(false)}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Toast notification */}
       {toastMessage && (

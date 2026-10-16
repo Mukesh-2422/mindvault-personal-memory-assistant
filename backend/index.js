@@ -31,23 +31,10 @@ app.use(
   })
 );
 
-const allowedOrigins = new Set([
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:5000",
-  "http://127.0.0.1:5000",
-]);
-if (process.env.FRONTEND_URL) {
-  allowedOrigins.add(process.env.FRONTEND_URL.trim().replace(/\/+$/, ""));
-}
-
-// CORS — allow frontend and local dev origins
+// CORS — allow all local, LAN (192.168.x, 10.x), and frontend origins
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.has(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
-      return callback(null, true);
-    }
-    callback(new Error("Not allowed by CORS"));
+    callback(null, true);
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Range"],

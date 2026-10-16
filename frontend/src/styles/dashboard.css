@@ -2145,59 +2145,138 @@
 }
 
 /* ============================================
-   Personal Command Center Dashboard
+   MindVault Centered AI Assistant Dashboard
+   Strictly Reusing Existing Theme Tokens
    ============================================ */
 
-.dashboard-command-center {
+.home-page.is-centered-dashboard {
+  min-height: calc(100vh - var(--nav-height) - 40px);
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
-  padding-bottom: 90px;
-  animation: fadeIn 0.3s ease-out;
+  align-items: center;
+  justify-content: center;
+  padding: 30px var(--space-lg) 60px;
 }
 
-.dashboard-greeting-header {
-  padding: var(--space-lg) 0 var(--space-xs);
+.dashboard-hero-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dashboard-greeting-pill {
+.dashboard-hero-header {
+  margin-bottom: var(--space-xl);
+}
+
+.dashboard-hero-title {
+  font-family: var(--font-heading);
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.dashboard-hero-subtitle {
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  max-width: 520px;
+  margin: 0 auto;
+  font-weight: 400;
+}
+
+/* Actions Row: Find, Ask AI, Capture */
+.dashboard-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.dashboard-action-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
+  gap: 8px;
+  padding: 9px 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
-  background: var(--accent-light);
-  color: var(--accent);
-  font-size: 12px;
+  color: var(--navy);
+  font-size: 13.5px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--space-sm);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  font-family: inherit;
 }
 
-.dashboard-greeting-title {
-  font-family: var(--font-heading);
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-  letter-spacing: -0.02em;
+.dashboard-action-pill svg {
+  color: var(--navy);
+  transition: transform var(--transition-fast);
 }
 
-.dashboard-greeting-subtitle {
-  font-size: 14.5px;
-  color: var(--text-secondary);
-  line-height: 1.5;
+.dashboard-action-pill:hover {
+  background: var(--accent-light);
+  border-color: var(--navy);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-/* Quick Capture Action Bar */
-.quick-capture-section {
+.dashboard-action-pill:hover svg {
+  transform: scale(1.1);
+}
+
+.dashboard-action-pill.active {
+  background: var(--navy);
+  color: #FFFFFF;
+  border-color: var(--navy);
+  box-shadow: 0 4px 14px rgba(11, 45, 82, 0.22);
+}
+
+.dashboard-action-pill.active svg {
+  color: #FFFFFF;
+}
+
+/* Main Ask MindVault Center Input */
+.dashboard-center-input-wrap {
+  width: 100%;
+  max-width: 680px;
+  margin-bottom: 24px;
+}
+
+.dashboard-center-input-wrap .chat-input-box {
+  min-height: 54px;
+  border: 1.5px solid var(--border-color);
+  box-shadow: 0 4px 16px rgba(11, 45, 82, 0.08);
+  padding: 0 8px 0 20px;
+}
+
+.dashboard-center-input-wrap .chat-input-box:focus-within {
+  border-color: var(--navy);
+  box-shadow: 0 6px 24px rgba(11, 45, 82, 0.14);
+}
+
+/* Suggested Question Chips */
+.dashboard-suggestions-section {
+  width: 100%;
+  max-width: 680px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
 }
 
-.quick-capture-label {
+.dashboard-suggestions-label {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -2205,228 +2284,89 @@
   color: var(--text-tertiary);
 }
 
-.quick-capture-buttons-row {
+.dashboard-chips-grid {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: none;
+  width: 100%;
 }
 
-.quick-capture-buttons-row::-webkit-scrollbar {
-  display: none;
-}
-
-.quick-capture-btn {
+.dashboard-chip-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 8px 16px;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-size: 13.5px;
-  font-weight: 600;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--transition-fast);
   box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  text-align: left;
+  font-family: inherit;
 }
 
-.quick-capture-btn svg {
-  color: var(--accent);
-  transition: transform var(--transition-fast);
-}
-
-.quick-capture-btn:hover {
+.dashboard-chip-btn:hover {
+  background: var(--accent-light);
+  border-color: var(--navy);
+  color: var(--navy);
   transform: translateY(-2px);
-  border-color: var(--accent);
-  background: var(--card-hover);
   box-shadow: var(--shadow-md);
 }
 
-.quick-capture-btn:hover svg {
-  transform: scale(1.15);
-}
-
-/* Dashboard Sections */
-.dashboard-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.dashboard-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.dashboard-section-title-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dashboard-section-title {
-  font-family: var(--font-heading);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.dashboard-section-link {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--accent);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.dashboard-section-link:hover {
-  background: var(--accent-light);
-}
-
-.dashboard-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-}
-
-/* Reminders Grid */
-.dashboard-reminders-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-}
-
-.dashboard-reminder-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.dashboard-reminder-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent);
-  background: var(--card-hover);
-}
-
-.reminder-card-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--accent-light);
-  color: var(--accent);
+.dashboard-chip-icon {
+  color: var(--navy);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.reminder-card-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.reminder-card-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.reminder-card-meta {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Dashboard Cards Grid */
-.dashboard-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 14px;
-}
-
-/* Dual Section Grid (Collections & People shortcuts) */
-.dashboard-dual-section-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 14px;
-}
-
-.dashboard-sub-card {
-  padding: 16px;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.dashboard-sub-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent);
-  background: var(--card-hover);
-}
-
-.sub-card-header {
+/* Chat Stream Header (Active Conversation) */
+.chat-stream-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  padding: 0 4px 16px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 20px;
 }
 
-.sub-card-title-group {
+.chat-stream-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--accent);
+  gap: 6px;
 }
 
-.sub-card-title-group h3 {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
+.chat-new-chat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
 }
 
-.sub-card-arrow {
-  font-size: 16px;
-  color: var(--text-tertiary);
-  transition: transform var(--transition-fast);
-}
-
-.dashboard-sub-card:hover .sub-card-arrow {
-  transform: translateX(3px);
-  color: var(--accent);
-}
-
-.sub-card-desc {
-  font-size: 12.5px;
-  color: var(--text-tertiary);
-  margin: 0;
+.chat-new-chat-btn:hover {
+  background: var(--accent-light);
+  border-color: var(--navy);
+  transform: translateY(-1px);
 }
 
 /* Chat Disambiguation UI */
@@ -2487,6 +2427,30 @@
   flex-direction: column;
   justify-content: flex-end;
   padding-bottom: 120px;
+}
+
+@media (max-width: 600px) {
+  .dashboard-hero-title {
+    font-size: 26px;
+  }
+  .dashboard-hero-subtitle {
+    font-size: 14px;
+    padding: 0 12px;
+  }
+  .dashboard-actions-row {
+    gap: 8px;
+  }
+  .dashboard-action-pill {
+    padding: 7px 14px;
+    font-size: 12.5px;
+  }
+  .dashboard-chips-grid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dashboard-chip-btn {
+    justify-content: center;
+  }
 }
 
 
