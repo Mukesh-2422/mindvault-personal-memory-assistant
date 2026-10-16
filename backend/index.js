@@ -31,17 +31,32 @@ app.use(
   })
 );
 
-// CORS — allow only the React frontend
-app.use(cors({
-  origin: "http://localhost:3000",
+const allowedOrigins = new Set([
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5000",
+  "http://127.0.0.1:5000",
+]);
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.add(process.env.FRONTEND_URL.trim().replace(/\/+$/, ""));
+}
+
+// CORS — allow frontend and local dev origins
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.has(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error("Not allowed by CORS"));
+  },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Range"],
   exposedHeaders: ["Content-Range", "Accept-Ranges", "Content-Length", "Content-Type"],
   credentials: true,
-}));
+};
 
-// Handle OPTIONS preflight requests explicitly
-app.options("*", cors());
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
@@ -98,10 +113,12 @@ async function startServer() {
   if ((await countDocuments("users")) === 0) {
     await seedData();
   }
-  // Verify SMTP config at startup so email misconfiguration fails loudly.
-  await verifySmtpConnection();
   app.listen(PORT, () => {
     console.log(`MindVault server running on http://localhost:${PORT}`);
+  });
+  // Non-blocking SMTP verification so server startup is instantaneous
+  verifySmtpConnection().catch((err) => {
+    console.warn("[Email] Background SMTP verification error:", err.message);
   });
 }
 

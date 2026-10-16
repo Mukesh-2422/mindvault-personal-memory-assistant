@@ -78,11 +78,18 @@ async function request(endpoint, options = {}) {
     data = await res.json().catch(() => ({}));
   } else {
     const text = await res.text().catch(() => "");
-    data = { error: text || `Server error (${res.status})` };
+    const cleanError = text.includes("Proxy error") || text.startsWith("<")
+      ? "Unable to connect to backend API server. Please ensure the backend is running."
+      : text || `Server error (${res.status})`;
+    data = { error: cleanError };
   }
 
   if (!res.ok) {
-    throw new Error(data.error || `Request failed with status ${res.status}`);
+    const msg = data.error || `Request failed with status ${res.status}`;
+    const cleanMsg = msg.includes("Proxy error")
+      ? "Unable to connect to backend API server. Please ensure the backend is running."
+      : msg;
+    throw new Error(cleanMsg);
   }
 
   return data;

@@ -9,7 +9,7 @@ import { getOnThisDay } from "../data/dummyData";
 import {
   Brain, Mic, Send, Search, Play, Pause, FileText, Image as ImageIcon,
   Video as VideoIcon, CheckSquare, Sparkles, ArrowDown, Plus, ArrowUpRight, X,
-  Paperclip, ChevronDown, Link2, Bell, Users, Layout, Calendar
+  Paperclip, ChevronDown, Link2, Bell, Users, Layout, Calendar, Pin
 } from "lucide-react";
 
 import { getMediaUrl, transcribeAudio } from "../api/voice";
@@ -482,6 +482,10 @@ export default function HomePage() {
       .slice(0, 4);
   }, [state.memories]);
 
+  const onThisDay = React.useMemo(() => {
+    return getOnThisDay(state.memories);
+  }, [state.memories]);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -528,9 +532,6 @@ export default function HomePage() {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [messages, isTyping]);
-
-  const onThisDay = getOnThisDay(state.memories || []);
-
 
   const triggerFileSelect = (acceptType) => {
     setFileAccept(acceptType);
@@ -1015,7 +1016,316 @@ export default function HomePage() {
   return (
     <div className="app">
       <TopNav />
-      <div className="main-content home-page is-minimal-layout">
+      <div className="main-content home-page">
+        {/* Skeleton Loading State */}
+        {isInitialLoading && (
+          <div className="dashboard-skeleton-container" style={{ padding: "24px 0", maxWidth: "800px", margin: "0 auto" }}>
+            <div className="skeleton skeleton-title" style={{ width: "40%", height: 32, marginBottom: 12, borderRadius: 8 }} />
+            <div className="skeleton skeleton-text" style={{ width: "65%", height: 16, marginBottom: 28, borderRadius: 6 }} />
+            <div style={{ display: "flex", gap: 10, marginBottom: 32, overflowX: "auto" }}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="skeleton" style={{ width: 110, height: 42, borderRadius: 10, flexShrink: 0 }} />
+              ))}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+              <div className="skeleton" style={{ height: 120, borderRadius: 14 }} />
+              <div className="skeleton" style={{ height: 120, borderRadius: 14 }} />
+            </div>
+          </div>
+        )}
+
+        {/* Empty State Onboarding View */}
+        {isEmptyState && (
+          <div className="empty-vault-onboarding">
+            <div className="empty-vault-art">
+              <svg viewBox="0 0 280 180" width="220" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="vaultAura" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#818cf8" stopOpacity="0" />
+                  </radialGradient>
+                </defs>
+
+                <ellipse cx="140" cy="95" rx="85" ry="65" fill="url(#vaultAura)" />
+
+                <rect x="40" y="140" width="200" height="12" rx="6" fill="#e2e8f0" />
+                <line x1="48" y1="140" x2="232" y2="140" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" />
+
+                <rect x="68" y="85" width="22" height="55" rx="4" fill="#0F2F5B" />
+                <rect x="73" y="93" width="12" height="3" rx="1.5" fill="#60a5fa" />
+
+                <rect x="94" y="95" width="18" height="45" rx="3" fill="#2563eb" />
+                <rect x="98" y="102" width="10" height="3" rx="1.5" fill="#bfdbfe" />
+
+                <rect x="118" y="65" width="84" height="75" rx="8" fill="#ffffff" stroke="#93c5fd" strokeWidth="2.5" />
+                <line x1="160" y1="66" x2="160" y2="139" stroke="#bfdbfe" strokeWidth="1.5" strokeDasharray="3 3" />
+                
+                <rect x="127" y="80" width="24" height="4" rx="2" fill="#bfdbfe" />
+                <rect x="127" y="90" width="20" height="3" rx="1.5" fill="#dbeafe" />
+                <rect x="127" y="98" width="22" height="3" rx="1.5" fill="#dbeafe" />
+
+                <rect x="168" y="80" width="24" height="4" rx="2" fill="#bfdbfe" />
+                <rect x="168" y="90" width="22" height="3" rx="1.5" fill="#dbeafe" />
+                <rect x="168" y="98" width="18" height="3" rx="1.5" fill="#dbeafe" />
+
+                <g transform="translate(206, 92) rotate(16)">
+                  <rect x="0" y="0" width="20" height="48" rx="4" fill="#3b82f6" />
+                  <rect x="4" y="8" width="12" height="3" rx="1.5" fill="#dbeafe" />
+                </g>
+
+                <g transform="translate(75, 48)">
+                  <path d="M7 0L8.6 4.6L13.2 6.2L8.6 7.8L7 12.4L5.4 7.8L0.8 6.2L5.4 4.6L7 0Z" fill="#2563eb" />
+                </g>
+                <g transform="translate(210, 52)">
+                  <path d="M5.5 0L6.7 3.6L10.3 4.8L6.7 6L5.5 9.6L4.3 6L0.7 4.8L4.3 3.6L5.5 0Z" fill="#60a5fa" />
+                </g>
+                <circle cx="138" cy="38" r="3" fill="#93c5fd" />
+              </svg>
+            </div>
+
+            <h1 className="empty-vault-title">Your Vault is Empty</h1>
+            <p className="empty-vault-subtitle">
+              This is where your saved memories, thoughts, and ideas will live. Let's capture your first one right now!
+            </p>
+
+            <div className="empty-vault-cards">
+              <button
+                type="button"
+                className="empty-vault-card"
+                onClick={() => {
+                  setInput("Remember that ");
+                  inputRef.current?.focus();
+                }}
+              >
+                <span className="empty-card-icon">💡</span>
+                <span className="empty-card-text">Try a quick note</span>
+              </button>
+
+              <button
+                type="button"
+                className="empty-vault-card"
+                onClick={() => {
+                  setInput("Save link: ");
+                  inputRef.current?.focus();
+                }}
+              >
+                <span className="empty-card-icon">🔗</span>
+                <span className="empty-card-text">Save a link</span>
+              </button>
+
+              <button
+                type="button"
+                className="empty-vault-card"
+                onClick={() => {
+                  startVoiceSearch();
+                }}
+              >
+                <span className="empty-card-icon">🎙️</span>
+                <span className="empty-card-text">Record a voice thought</span>
+              </button>
+            </div>
+
+            <div className="empty-vault-guide">
+              <span className="guide-text">Type below or use voice to capture your first memory</span>
+              <div className="guide-arrow-bounce">
+                <ArrowDown size={18} strokeWidth={2.5} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Command Center Dashboard (when memories exist, chat is empty, and initial load complete) */}
+        {!isInitialLoading && hasMemories && messages.length === 0 && (
+          <div className="dashboard-command-center">
+            {/* On This Day Recall (if present & enabled) */}
+            {onThisDay && state.aiPreferences?.onThisDayEnabled !== false && (
+              <div
+                className="memory-recall-card"
+                onClick={() => navigate(`/memory/${onThisDay.id || onThisDay._id}`, { state: { from: "/home" } })}
+              >
+                <div className="recall-header">
+                  <Sparkles size={16} strokeWidth={2} />
+                  <span className="recall-label">On This Day</span>
+                </div>
+                <div className="recall-content">
+                  <div className="recall-title">{onThisDay.title}</div>
+                  <div className="recall-text">{(onThisDay.content || "").substring(0, 140)}...</div>
+                </div>
+                <span className="recall-action">
+                  View Memory <ArrowUpRight size={14} />
+                </span>
+              </div>
+            )}
+
+            {/* Dynamic Greeting Header */}
+            <div className="dashboard-greeting-header">
+              <div className="dashboard-greeting-pill">
+                <Sparkles size={13} strokeWidth={2} />
+                <span>Second Brain Command Center</span>
+              </div>
+              <h1 className="dashboard-greeting-title">
+                {getGreeting()}, {state.user?.name || "Friend"} 👋
+              </h1>
+              <p className="dashboard-greeting-subtitle">
+                Ask your second brain anything below or quickly capture a new thought, voice memo, or event.
+              </p>
+            </div>
+
+            {/* Quick Capture Action Bar */}
+            <div className="quick-capture-section">
+              <div className="quick-capture-label">Quick Capture</div>
+              <div className="quick-capture-buttons-row">
+                <button
+                  type="button"
+                  className="quick-capture-btn"
+                  onClick={() => navigate("/new?type=text")}
+                >
+                  <FileText size={16} strokeWidth={1.8} />
+                  <span>Text Note</span>
+                </button>
+                <button
+                  type="button"
+                  className="quick-capture-btn"
+                  onClick={() => navigate("/new?type=voice")}
+                >
+                  <Mic size={16} strokeWidth={1.8} />
+                  <span>Voice Memo</span>
+                </button>
+                <button
+                  type="button"
+                  className="quick-capture-btn"
+                  onClick={() => navigate("/new?type=image")}
+                >
+                  <ImageIcon size={16} strokeWidth={1.8} />
+                  <span>Image</span>
+                </button>
+                <button
+                  type="button"
+                  className="quick-capture-btn"
+                  onClick={() => navigate("/new?type=video")}
+                >
+                  <VideoIcon size={16} strokeWidth={1.8} />
+                  <span>Video</span>
+                </button>
+                <button
+                  type="button"
+                  className="quick-capture-btn"
+                  onClick={() => navigate("/new?type=checklist")}
+                >
+                  <CheckSquare size={16} strokeWidth={1.8} />
+                  <span>Checklist</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Today & Upcoming Reminders */}
+            {upcomingReminders.length > 0 && (
+              <div className="dashboard-section">
+                <div className="dashboard-section-header">
+                  <div className="dashboard-section-title-group">
+                    <Bell size={18} strokeWidth={2} />
+                    <h2 className="dashboard-section-title">Today & Upcoming</h2>
+                    <span className="dashboard-badge">{upcomingReminders.length} active</span>
+                  </div>
+                </div>
+                <div className="dashboard-reminders-grid">
+                  {upcomingReminders.map((rem) => (
+                    <div
+                      key={rem.id}
+                      className="dashboard-reminder-card"
+                      onClick={() => navigate(`/memory/${rem.memoryId}`, { state: { from: "/home" } })}
+                    >
+                      <div className="reminder-card-icon">
+                        <Bell size={15} strokeWidth={2} />
+                      </div>
+                      <div className="reminder-card-content">
+                        <div className="reminder-card-title">{rem.title}</div>
+                        <div className="reminder-card-meta">{rem.memoryTitle}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Pinned Memories */}
+            {pinnedMemories.length > 0 && (
+              <div className="dashboard-section">
+                <div className="dashboard-section-header">
+                  <div className="dashboard-section-title-group">
+                    <Pin size={18} strokeWidth={2} />
+                    <h2 className="dashboard-section-title">Pinned Memories</h2>
+                  </div>
+                </div>
+                <div className="dashboard-cards-grid">
+                  {pinnedMemories.map((mem) => (
+                    <MemoryCard key={mem.id || mem._id} memory={mem} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Memories Feed */}
+            {recentMemories.length > 0 && (
+              <div className="dashboard-section">
+                <div className="dashboard-section-header">
+                  <div className="dashboard-section-title-group">
+                    <FileText size={18} strokeWidth={2} />
+                    <h2 className="dashboard-section-title">Recent Memories</h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="dashboard-section-link"
+                    onClick={() => navigate("/timeline")}
+                  >
+                    View Timeline →
+                  </button>
+                </div>
+                <div className="dashboard-cards-grid">
+                  {recentMemories.map((mem) => (
+                    <MemoryCard key={mem.id || mem._id} memory={mem} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Collections & People Shortcuts */}
+            <div className="dashboard-dual-section-grid">
+              <div
+                className="dashboard-sub-card"
+                onClick={() => navigate("/collections")}
+              >
+                <div className="sub-card-header">
+                  <div className="sub-card-title-group">
+                    <Layout size={18} strokeWidth={1.8} />
+                    <h3>Collections</h3>
+                  </div>
+                  <span className="sub-card-arrow">→</span>
+                </div>
+                <p className="sub-card-desc">
+                  Organize thoughts into custom vaults & categories
+                </p>
+              </div>
+
+              <div
+                className="dashboard-sub-card"
+                onClick={() => navigate("/people")}
+              >
+                <div className="sub-card-header">
+                  <div className="sub-card-title-group">
+                    <Users size={18} strokeWidth={1.8} />
+                    <h3>People & Contacts</h3>
+                  </div>
+                  <span className="sub-card-arrow">→</span>
+                </div>
+                <p className="sub-card-desc">
+                  Track meetings, conversations, and personal connections
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Chat Messages */}
         {messages.length > 0 && (
           <div className="chat-container">
@@ -1057,6 +1367,13 @@ export default function HomePage() {
                           </div>
                         )}
                         {msg.answer || msg.content}
+
+                        {/* Confirmation Box (Saved as "...") */}
+                        {msg.savedTitle && (
+                          <div className="chat-saved-pill">
+                            <span className="chat-saved-check">✓</span> Saved as "{msg.savedTitle}"
+                          </div>
+                        )}
                       </div>
 
                       {/* Multiple matches disambiguation cards */}
@@ -1280,7 +1597,7 @@ export default function HomePage() {
                 <textarea
                   ref={inputRef}
                   className="chat-input"
-                  placeholder={attachedFile ? `Ask about "${attachedFile.name}"...` : "Type or speak your memory..."}
+                  placeholder={attachedFile ? `Ask about "${attachedFile.name}"...` : "Ask me anything or tell me something..."}
                   rows={1}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}

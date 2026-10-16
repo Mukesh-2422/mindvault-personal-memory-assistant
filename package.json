@@ -1,4 +1,13 @@
 {
+  "name": "mindvault",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "server": "npm --prefix backend start",
+    "client": "npm --prefix frontend start",
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build"
+  },
   "dependencies": {
     "dotenv": "^17.4.2",
     "mongoose": "^9.7.3"
