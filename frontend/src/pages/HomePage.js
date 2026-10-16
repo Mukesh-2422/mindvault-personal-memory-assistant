@@ -511,16 +511,6 @@ export default function HomePage() {
     }
   }, [state.dataLoaded, state.loading]);
 
-  // Click outside to close attachment menu
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (attachMenuRef.current && !attachMenuRef.current.contains(e.target)) {
-        setAttachMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -1131,52 +1121,10 @@ export default function HomePage() {
           </div>
         ) : (
           <>
-            <div className="chat-add-btn-wrapper" ref={attachMenuRef}>
-              <button
-                type="button"
-                className="chat-add-btn"
-                onClick={() => setAttachMenuOpen((prev) => !prev)}
-                title="Attach file or media to search"
-                aria-label="Attach file or media to search"
-              >
-                <Plus size={18} strokeWidth={2.5} style={{ transform: attachMenuOpen ? "rotate(45deg)" : "none", transition: "transform 0.2s" }} />
-              </button>
-
-              {/* Attachment Options Popover */}
-              {attachMenuOpen && (
-                <div className="chat-attachment-popover">
-                  <button
-                    type="button"
-                    className="attachment-popover-item"
-                    onClick={() => triggerFileSelect("image/*")}
-                  >
-                    <span className="attachment-popover-icon"><ImageIcon size={16} /></span>
-                    <span className="attachment-popover-text">Upload Image</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="attachment-popover-item"
-                    onClick={() => triggerFileSelect("audio/*")}
-                  >
-                    <span className="attachment-popover-icon"><Mic size={16} /></span>
-                    <span className="attachment-popover-text">Upload Audio</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="attachment-popover-item"
-                    onClick={() => triggerFileSelect(".pdf,.doc,.docx,.txt,.md,application/pdf,text/*")}
-                  >
-                    <span className="attachment-popover-icon"><FileText size={16} /></span>
-                    <span className="attachment-popover-text">Upload Document/File</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
             <textarea
               ref={inputRef}
               className="chat-input"
-              placeholder={attachedFile ? `Ask about "${attachedFile.name}"...` : "Ask MindVault anything or type a thought..."}
+              placeholder="Ask MindVault anything..."
               rows={1}
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -1186,7 +1134,7 @@ export default function HomePage() {
               <button
                 type="button"
                 className={`chat-mic-btn ${isVoiceRecording ? "recording" : ""}`}
-                title={isVoiceRecording ? "Stop and search memory" : "Search or ask memory using voice"}
+                title={isVoiceRecording ? "Stop voice recording" : "Ask using voice"}
                 onClick={isVoiceRecording ? finishVoiceSearch : startVoiceSearch}
               >
                 <Mic size={18} strokeWidth={1.75} />
@@ -1195,7 +1143,7 @@ export default function HomePage() {
                 type="button"
                 className="chat-send-btn"
                 onClick={() => handleSend()}
-                disabled={(!input.trim() && !attachedFile) || isTyping}
+                disabled={!input.trim() || isTyping}
                 title="Send"
               >
                 <Send size={16} strokeWidth={2} />
@@ -1220,48 +1168,20 @@ export default function HomePage() {
                 {getGreeting()}, {state.user?.name || "Friend"} 👋
               </h1>
               <p className="dashboard-hero-subtitle">
-                Ask your second brain anything below, search memories, or capture a new thought.
+                Ask your second brain anything below, or explore suggested questions to get started.
               </p>
             </div>
 
-            {/* Find, Ask AI, and Capture Action Buttons */}
+            {/* Ask AI Action Mode */}
             <div className="dashboard-actions-row">
               <button
                 type="button"
-                className={`dashboard-action-pill ${activeAction === "ask" ? "active" : ""}`}
-                onClick={() => {
-                  setActiveAction("ask");
-                  inputRef.current?.focus();
-                }}
+                className="dashboard-action-pill active"
+                onClick={() => inputRef.current?.focus()}
+                title="Ask MindVault AI"
               >
                 <Sparkles size={16} strokeWidth={2} />
                 <span>Ask AI</span>
-              </button>
-
-              <button
-                type="button"
-                className="dashboard-action-pill"
-                onClick={() => {
-                  setActiveAction("find");
-                  navigate("/search");
-                }}
-                title="Search memories with filters"
-              >
-                <Search size={16} strokeWidth={2} />
-                <span>Find</span>
-              </button>
-
-              <button
-                type="button"
-                className="dashboard-action-pill"
-                onClick={() => {
-                  setActiveAction("capture");
-                  navigate("/new");
-                }}
-                title="Capture a new memory"
-              >
-                <Plus size={16} strokeWidth={2} />
-                <span>Capture</span>
               </button>
             </div>
 

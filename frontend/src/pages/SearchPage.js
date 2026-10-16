@@ -167,7 +167,7 @@ export default function SearchPage() {
           <button className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={16} strokeWidth={1.5} />
           </button>
-          <h1 className="search-page-title">Ask MindVault</h1>
+          <h1 className="search-page-title">Search Memories</h1>
         </div>
 
         {voiceNotice && (

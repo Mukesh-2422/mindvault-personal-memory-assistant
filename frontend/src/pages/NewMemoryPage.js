@@ -103,8 +103,17 @@ export default function NewMemoryPage() {
   const now = new Date();
 
   useEffect(() => {
-    titleRef.current?.focus();
-  }, []);
+    if (searchParams.get("upload") === "file") {
+      setTimeout(() => {
+        if (fileInputRef.current) {
+          fileInputRef.current.accept = ".pdf,.doc,.docx,.txt,.md,application/pdf,text/*";
+          fileInputRef.current.click();
+        }
+      }, 150);
+    } else {
+      titleRef.current?.focus();
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const handleClick = (e) => {

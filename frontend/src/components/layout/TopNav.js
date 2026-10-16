@@ -60,12 +60,17 @@ export default function TopNav() {
           </button>
           <button
             className={`nav-btn nav-search-pill ${isActive("/search") ? "active" : ""}`}
-            onClick={() => setCommandPaletteOpen(true)}
-            title="Search & Commands (Ctrl+K)"
+            onClick={() => navigate("/search")}
+            title="Search memories (Ctrl+K for Command Palette)"
           >
             <Search size={15} strokeWidth={2} />
             <span>Search</span>
             <kbd
+              onClick={(e) => {
+                e.stopPropagation();
+                setCommandPaletteOpen(true);
+              }}
+              title="Open Command Palette (Ctrl+K)"
               style={{
                 marginLeft: "6px",
                 fontSize: "10px",
@@ -74,6 +79,7 @@ export default function TopNav() {
                 background: "var(--bg-subtle, rgba(0,0,0,0.06))",
                 color: "var(--text-tertiary)",
                 border: "1px solid var(--border-color, rgba(0,0,0,0.08))",
+                cursor: "pointer",
               }}
             >
               ⌘K

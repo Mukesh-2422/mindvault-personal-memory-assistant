@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, CheckSquare, Video, Mic, Image, FileText } from "lucide-react";
+import { Plus, CheckSquare, Video, Mic, Image, FileText, Paperclip } from "lucide-react";
 
 const FAB_ITEMS = [
   { icon: FileText, label: "Text Memory", type: "text" },
@@ -8,6 +8,7 @@ const FAB_ITEMS = [
   { icon: Image, label: "Image Memory", type: "image" },
   { icon: Video, label: "Video Memory", type: "video" },
   { icon: CheckSquare, label: "Checklist", type: "checklist" },
+  { icon: Paperclip, label: "Document / File", type: "file" },
 ];
 
 export default function FAB() {
@@ -27,7 +28,11 @@ export default function FAB() {
 
   const handleSelect = (type) => {
     setOpen(false);
-    navigate(`/new?type=${type}`);
+    if (type === "file") {
+      navigate("/new?type=text&upload=file");
+    } else {
+      navigate(`/new?type=${type}`);
+    }
   };
 
   return (
